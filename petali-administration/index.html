@@ -103,7 +103,7 @@ function loginView(msg = '') {
 function pick(k) { picked = k; loginView(); }
 async function signIn() {
   const { error } = await sb.auth.signInWithPassword({ email: CFG.accounts[picked].email, password: $('#pw').value });
-  if (error) return loginView('كلمة المرور غير صحيحة، جرّبي مرة ثانية.');
+  if (error) return loginView(/invalid login/i.test(error.message) ? 'البريد أو كلمة المرور غير صحيحة.' : 'تعذّر الدخول: ' + error.message);
   boot();
 }
 async function signOut() { await sb.auth.signOut(); location.reload(); }
