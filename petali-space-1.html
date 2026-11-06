@@ -33,7 +33,9 @@ input:focus,select:focus,button:focus-visible{outline:2px solid var(--mv);outlin
 .tag.s-new,.tag.s-awaiting_confirmation{background:var(--pk)}.tag.s-in_progress{background:var(--mv-l)}
 .tag.s-ready,.tag.s-completed,.tag.s-final_confirmed{background:#DDEBDF}.tag.s-cancelled{background:#eee;color:var(--tx2)}
 .bar{height:8px;background:var(--mv-l);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--mv)}
-.stitch{height:12px;margin:10px 0;background:repeating-linear-gradient(90deg,var(--mv) 0 8px,transparent 8px 16px);-webkit-mask:linear-gradient(#000,#000);opacity:.35;border-radius:6px;height:3px}
+.stitch{height:10px;margin:12px 0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='10'%3E%3Cellipse cx='11' cy='5' rx='8' ry='3.2' fill='none' stroke='%23A86B9E' stroke-width='1.6'/%3E%3C/svg%3E") repeat-x center;opacity:.55}
+.empty{text-align:center}.empty::before{content:'';display:block;width:38px;height:38px;margin:0 auto 6px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Ccircle cx='9' cy='25' r='5.5' fill='%23F4DDE5' stroke='%23A86B9E' stroke-width='1.5'/%3E%3Cpath d='M12 22L27 7' stroke='%23A86B9E' stroke-width='3' stroke-linecap='round' fill='none'/%3E%3Cpath d='M27 7q5-3 3-6' stroke='%23A86B9E' stroke-width='3' stroke-linecap='round' fill='none'/%3E%3C/svg%3E") center/contain no-repeat;opacity:.7}
+.stamp{display:block;margin:26px auto 4px;height:70px;opacity:.28}
 .nav{position:fixed;bottom:0;inset-inline:0;display:flex;background:var(--card);border-top:2px dashed var(--mv-l);padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:6}
 .nav button{flex:1;background:none;border:0;padding:6px 2px;color:var(--tx2);font-size:.8rem;position:relative;cursor:pointer}
 .nav button.on{color:var(--mv);font-weight:700}.nav span.n{display:block;font-size:1.25rem}
@@ -70,6 +72,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const ago = d => { const m = (Date.now() - new Date(d)) / 6e4; return m < 1 ? 'الآن' : m < 60 ? `منذ ${Math.floor(m)} دقيقة` : m < 1440 ? `منذ ${Math.floor(m/60)} ساعة` : `منذ ${Math.floor(m/1440)} يوم`; };
 const money = n => Number(n || 0).toFixed(2) + ' ر.س';
 const pct = (d, q) => q ? Math.min(100, Math.round(100 * d / q)) : 0;
+const SETS = [['savings_percent','نسبة مدخرات بيتالي من كل طلب (%)','num'],['deduct_materials_cost','خصم تكلفة المواد من الربح قبل التقسيم (تذهب للمدخرات)','bool'],['deposit_enabled','تنبيه العربون للطلبات الكبيرة','bool'],['deposit_threshold','حد الطلب الكبير (ر.س): ما فوقه يُنصح بعربون','num'],['delivery_enabled','تفعيل التوصيل في موقع العملاء','bool'],['hourly_rate','أجر الساعة لاقتراح السعر (ر.س)','num'],['margin_percent','هامش الربح للقطعة المفردة (%)','num'],['wholesale_margin_percent','هامش الربح للجملة (%)','num'],['wholesale_min_qty','أقل كمية لتطبيق سعر الجملة','num'],['due_alert_days','التنبيه قبل موعد الإنجاز (بالأيام)','num'],['order_prefix','بادئة رقم الطلب (للطلبات الجديدة)','text'],['currency','رمز العملة','text']];
 let post = null, statP = 'month', showArch = false, cal = { y: new Date().getFullYear(), m: new Date().getMonth(), day: '' };
 const NC = { mauve:'#F1E3EF', pink:'#F4DDE5', peach:'#F7E1D7' }, OC = { shared:'#A86B9E', rama:'#E7A8BC', maryam:'#EFB79B' }, ON = { shared:'مشترك', rama:'راما', maryam:'مريم' };
 const TL = { products:'منتج', orders:'طلب', order_items:'بند طلب', inventory_items:'مادة', finance_entries:'قيد مالي', notes:'ملاحظة', offers:'عرض', reviews:'تقييم', calendar_events:'موعد', pickup_locations:'موقع استلام', product_materials:'مادة منتج', product_private:'تسعير منتج', settings:'إعداد' };
@@ -124,7 +127,7 @@ async function countUnread() {
 }
 function drawNav() {
   const items = [['home','🏠','الرئيسية'],['orders','🧶','الطلبات'],['products','🧵','المنتجات'],['inventory','📦','المخزون'],['more','⋯','المزيد']];
-  const grp = { order:'orders', neworder:'orders', product:'products', finance:'more', locations:'more', offers:'more', reviews:'more', stats:'more', notes:'more', calendar:'more', export:'more', undo:'more' };
+  const grp = { order:'orders', neworder:'orders', product:'products', finance:'more', locations:'more', offers:'more', reviews:'more', stats:'more', notes:'more', calendar:'more', export:'more', undo:'more', settings:'more' };
   const cur = grp[view] || view;
   $('#nav').innerHTML = items.map(([k, i, t]) => `<button class="${cur === k ? 'on' : ''}" onclick="go('${k}')"><span class="n">${i}</span>${t}</button>`).join('');
   const b = $('#bell'); if (b) b.innerHTML = '🔔' + (unread ? `<b class="badge">${unread}</b>` : '');
@@ -133,6 +136,7 @@ async function go(v, a) { view = v; arg = a; drawNav(); await render(); scrollTo
 async function render() {
   const m = $('#main'); if (!m) return;
   try { m.innerHTML = await V[view](arg); if (post) { const f = post; post = null; f(); } } catch (e) { m.innerHTML = `<div class="card">تعذّر تحميل الصفحة: ${esc(e.message)}</div>`; }
+  if (view === 'home') m.insertAdjacentHTML('beforeend', `<img class="stamp" src="${CFG.logo}" alt="" onerror="this.remove()">`);
   if (view === 'chat') { const b = $('#msgs'); if (b) b.scrollTop = b.scrollHeight; }
 }
 function realtime() {
@@ -164,7 +168,7 @@ const V = {
     </div>
     <h2 style="margin-top:8px">الطلبات الجارية</h2>
     ${orders.map(r => { const x = prog[r.id] || { q: 0, d: 0 }; return `<div class="card click" onclick="go('order','${r.id}')"><div class="row"><b class="grow">${esc(r.customer_name)}</b><span class="tag s-${r.status}">${ST[r.status]}</span></div>
-      <div class="sub" style="margin:4px 0 8px">${r.executor ? 'تنفذها: ' + EX[r.executor] : 'لم تُحدَّد المنفذة'}${r.due_date ? ' · الموعد ' + r.due_date : ''}</div><div class="bar"><i style="width:${pct(x.d, x.q)}%"></i></div></div>`; }).join('') || '<div class="card sub">لا توجد طلبات جارية.</div>'}
+      <div class="sub" style="margin:4px 0 8px">${r.executor ? 'تنفذها: ' + EX[r.executor] : 'لم تُحدَّد المنفذة'}${r.due_date ? ' · الموعد ' + r.due_date : ''}</div><div class="bar"><i style="width:${pct(x.d, x.q)}%"></i></div></div>`; }).join('') || '<div class="card sub empty">لا توجد طلبات جارية.</div>'}
     <h2>آخر النشاطات</h2>
     <div class="card"><div class="tl">${(ev.data || []).map(e => `<div class="click" onclick="go('order','${e.order_id}')">${esc(e.text)}<div class="sub">${esc(e.actor_name || '')} · ${ago(e.created_at)}</div></div>`).join('') || '<span class="sub">لا نشاط بعد.</span>'}</div></div>`;
   },
@@ -178,7 +182,7 @@ const V = {
     <div class="row" style="margin:10px 0"><select onchange="filt.st=this.value;render()" class="grow"><option value="">كل الحالات</option>${Object.entries(ST).map(([k, v]) => `<option value="${k}" ${filt.st === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
     <select onchange="filt.ex=this.value;render()" class="grow"><option value="">كل المنفذات</option>${Object.entries(EX).map(([k, v]) => `<option value="${k}" ${filt.ex === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
     ${rows.map(r => `<div class="card click" onclick="go('order','${r.id}')"><div class="row"><b>${esc(r.order_no)}</b><span class="grow">${esc(r.customer_name)}</span><span class="tag s-${r.status}">${ST[r.status]}</span></div>
-    <div class="sub">${money(r.total)} · ${esc(r.pickup_location_name || '')} · ${ago(r.created_at)}</div></div>`).join('') || '<div class="card sub">لا توجد طلبات مطابقة.</div>'}`;
+    <div class="sub">${money(r.total)} · ${esc(r.pickup_location_name || '')} · ${ago(r.created_at)}</div></div>`).join('') || '<div class="card sub empty">لا توجد طلبات مطابقة.</div>'}`;
   },
 
   async order(id) {
@@ -220,7 +224,7 @@ const V = {
     ${(data || []).map(i => { const low = Number(i.quantity) <= Number(i.min_quantity);
       return `<div class="card"><div class="row"><b class="grow">${esc(i.name)} <span class="tag">${CAT[i.category] || ''}</span></b><span class="${low ? 'low' : ''}">${Number(i.quantity)} ${esc(i.unit)}</span></div>
       <div class="sub">التنبيه عند ${Number(i.min_quantity)} · التكلفة ${Number(i.unit_cost).toFixed(2)} للوحدة${i.purchased_at ? ' · آخر شراء ' + i.purchased_at : ''}</div>
-      <div class="row" style="margin-top:8px"><button class="btn sm" onclick="buyItem('${i.id}')">+ شراء</button><button class="btn soft sm" onclick="adjust('${i.id}')">تعديل الكمية</button><button class="btn soft sm" onclick="editItem('${i.id}')">تعديل</button><button class="btn del sm" onclick="delItem('${i.id}')">حذف</button></div></div>`; }).join('') || '<div class="card sub">لا توجد مواد بعد.</div>'}`;
+      <div class="row" style="margin-top:8px"><button class="btn sm" onclick="buyItem('${i.id}')">+ شراء</button><button class="btn soft sm" onclick="adjust('${i.id}')">تعديل الكمية</button><button class="btn soft sm" onclick="editItem('${i.id}')">تعديل</button><button class="btn del sm" onclick="delItem('${i.id}')">حذف</button></div></div>`; }).join('') || '<div class="card sub empty">لا توجد مواد بعد.</div>'}`;
   },
 
   async products() {
@@ -229,7 +233,7 @@ const V = {
     ${(data || []).map(p => `<div class="card"><div class="row">${p.image_path ? `<img src="${imgUrl(p.image_path)}" alt="" style="width:56px;height:56px;border-radius:12px;object-fit:cover">` : ''}
       <div class="grow click" onclick="editProduct('${p.id}')"><b>${esc(p.name)}</b><div class="sub">${money(p.price)}${p.wholesale_price ? ' · جملة ' + money(p.wholesale_price) : ''}</div></div>
       ${p.is_paused ? '<span class="tag">متوقف مؤقتًا</span>' : !p.is_available ? '<span class="tag">غير متاح</span>' : '<span class="tag s-ready">ظاهر للعملاء</span>'}</div>
-      <div class="row" style="margin-top:8px"><button class="btn soft sm" onclick="togglePause('${p.id}',${!p.is_paused})">${p.is_paused ? 'استئناف' : 'إيقاف مؤقت'}</button></div></div>`).join('') || '<div class="card sub">لا توجد منتجات بعد.</div>'}`;
+      <div class="row" style="margin-top:8px"><button class="btn soft sm" onclick="togglePause('${p.id}',${!p.is_paused})">${p.is_paused ? 'استئناف' : 'إيقاف مؤقت'}</button></div></div>`).join('') || '<div class="card sub empty">لا توجد منتجات بعد.</div>'}`;
   },
 
   async product() {
@@ -256,7 +260,7 @@ const V = {
     <div class="row"><button class="btn grow" onclick="saveProduct()">حفظ المنتج</button>${f.id ? `<button class="btn del" onclick="delProduct()">حذف</button>` : ''}</div>`;
   },
 
-  more() { return `<h2>المزيد</h2><div class="grid">${[['finance','💰','المالية'],['locations','📍','مواقع الاستلام'],['offers','🎁','العروض والخصومات'],['reviews','⭐','تقييمات العملاء'],['stats','📊','الإحصاءات'],['notes','📝','لوحة الملاحظات'],['calendar','📅','الجدول المشترك'],['export','💾','التصدير والنسخ الاحتياطي'],['undo','↩️','سجل التعديلات والتراجع']].map(([k, i, t]) => `<div class="card click" onclick="go('${k}')"><span style="font-size:1.6rem">${i}</span> <b>${t}</b></div>`).join('')}</div>`; },
+  more() { return `<h2>المزيد</h2><div class="grid">${[['finance','💰','المالية'],['locations','📍','مواقع الاستلام'],['offers','🎁','العروض والخصومات'],['reviews','⭐','تقييمات العملاء'],['stats','📊','الإحصاءات'],['notes','📝','لوحة الملاحظات'],['calendar','📅','الجدول المشترك'],['export','💾','التصدير والنسخ الاحتياطي'],['undo','↩️','سجل التعديلات والتراجع'],['settings','⚙️','الإعدادات']].map(([k, i, t]) => `<div class="card click" onclick="go('${k}')"><span style="font-size:1.6rem">${i}</span> <b>${t}</b></div>`).join('')}</div>`; },
 
   async neworder() {
     const f = no, P = prodCache, pr = i => P.find(p => p.id === i.pid);
@@ -281,7 +285,7 @@ const V = {
     <select id="fe_a"><option value="savings">المدخرات</option><option value="rama">راما</option><option value="maryam">مريم</option></select><input id="fe_m" type="number" step="any" placeholder="المبلغ"><input id="fe_n" placeholder="وصف أو ملاحظة"></div>
     <button class="btn" style="margin-top:10px" onclick="addEntry()">تسجيل</button><div class="sub" style="margin-top:6px">التحويل للمدخرات يخصم من الحساب المختار ويضيف للمدخرات. التعديل يقبل رقمًا سالبًا.</div></div>
     <h2>السجل المالي</h2>${(l.data || []).map(e => `<div class="card" style="${e.voided_at ? 'opacity:.5' : ''}"><div class="row"><b class="grow">${FT[e.type] || e.type} · ${AC[e.account] || e.account}</b><b class="${e.amount < 0 ? 'low' : ''}" style="${e.voided_at ? 'text-decoration:line-through' : ''}">${money(e.amount)}</b></div>
-    <div class="sub">${e.entry_date} · ${esc(e.note || '')}${e.voided_at ? ' · ملغاة' : ''}</div><button class="btn soft sm" style="margin-top:6px" onclick="voidEntry('${e.id}',${!e.voided_at})">${e.voided_at ? 'استرجاع القيد' : 'إلغاء القيد'}</button></div>`).join('') || '<div class="card sub">لا توجد عمليات بعد.</div>'}`;
+    <div class="sub">${e.entry_date} · ${esc(e.note || '')}${e.voided_at ? ' · ملغاة' : ''}</div><button class="btn soft sm" style="margin-top:6px" onclick="voidEntry('${e.id}',${!e.voided_at})">${e.voided_at ? 'استرجاع القيد' : 'إلغاء القيد'}</button></div>`).join('') || '<div class="card sub empty">لا توجد عمليات بعد.</div>'}`;
   },
 
   async locations() {
@@ -301,14 +305,14 @@ const V = {
     <button class="btn" style="margin-top:10px" onclick="addOffer()">إضافة العرض</button></div>
     ${(o.data || []).map(x => `<div class="card"><div class="row"><b class="grow">${esc(x.title)}</b><span class="tag ${x.is_active ? 's-ready' : ''}">${x.is_active ? 'فعّال' : 'متوقف'}</span></div>
     <div class="sub">${x.kind === 'percent' ? x.value + '%' : x.kind === 'fixed' ? money(x.value) : 'هدية: ' + esc(pn[x.gift_product_id] || '') + ' ×' + x.gift_qty}${x.applies_to_product ? ' · على ' + esc(pn[x.applies_to_product] || '') : ''}${x.min_qty > 1 ? ' · من ' + x.min_qty + ' قطع' : ''}${x.min_order_total > 0 ? ' · عند ' + money(x.min_order_total) : ''}</div>
-    <div class="row" style="margin-top:8px"><button class="btn soft sm" onclick="upOffer('${x.id}',{is_active:${!x.is_active}})">${x.is_active ? 'إيقاف' : 'تفعيل'}</button><button class="btn del sm" onclick="delOffer('${x.id}')">حذف</button></div></div>`).join('') || '<div class="card sub">لا توجد عروض.</div>'}`;
+    <div class="row" style="margin-top:8px"><button class="btn soft sm" onclick="upOffer('${x.id}',{is_active:${!x.is_active}})">${x.is_active ? 'إيقاف' : 'تفعيل'}</button><button class="btn del sm" onclick="delOffer('${x.id}')">حذف</button></div></div>`).join('') || '<div class="card sub empty">لا توجد عروض.</div>'}`;
   },
 
   async reviews() {
     const { data } = await sb.from('reviews').select('*, orders(order_no,customer_name)').is('deleted_at', null).order('created_at', { ascending: false });
     return `<h2>تقييمات العملاء</h2>${(data || []).map(r => `<div class="card" style="${r.is_visible ? '' : 'opacity:.6'}"><div class="row"><b class="grow">${esc(r.orders?.customer_name || '')} <span class="sub">${esc(r.orders?.order_no || '')}</span></b><span>${'⭐'.repeat(r.rating)}</span></div>
     <div>${esc(r.comment || '')}</div><div class="sub">${ago(r.created_at)} · ${r.is_visible ? 'ظاهر للعملاء' : 'مخفي'}</div>
-    <div class="row" style="margin-top:8px"><button class="btn soft sm" onclick="upRev('${r.id}',{is_visible:${!r.is_visible}})">${r.is_visible ? 'إخفاء' : 'إظهار'}</button><button class="btn del sm" onclick="upRev('${r.id}',{deleted_at:new Date().toISOString()})">حذف</button></div></div>`).join('') || '<div class="card sub">لا توجد تقييمات بعد.</div>'}`;
+    <div class="row" style="margin-top:8px"><button class="btn soft sm" onclick="upRev('${r.id}',{is_visible:${!r.is_visible}})">${r.is_visible ? 'إخفاء' : 'إظهار'}</button><button class="btn del sm" onclick="upRev('${r.id}',{deleted_at:new Date().toISOString()})">حذف</button></div></div>`).join('') || '<div class="card sub empty">لا توجد تقييمات بعد.</div>'}`;
   },
 
   async stats() {
@@ -345,7 +349,7 @@ const V = {
     ${showArch ? '' : `<div class="card dash"><textarea id="nt_b" rows="3" placeholder="اكتبي ملاحظة..."></textarea><div class="row" style="margin-top:10px"><select id="nt_c" style="width:auto"><option value="mauve">موفي</option><option value="pink">وردي</option><option value="peach">خوخي</option></select><button class="btn grow" onclick="addSticky()">إضافة</button></div></div>`}
     <div class="grid">${(data || []).map(n => `<div class="card" style="background:${NC[n.color] || NC.mauve};${n.pinned ? 'border:2px solid var(--mv)' : ''}"><div style="white-space:pre-wrap">${n.pinned ? '📌 ' : ''}${esc(n.body)}</div>
     <div class="sub" style="margin-top:8px">${esc(staff[n.author_id]?.name || '')} · ${ago(n.created_at)} · ${new Date(n.created_at).toLocaleDateString('ar-SA')}</div>
-    <div class="row" style="margin-top:8px"><button class="btn soft sm" onclick="upNote('${n.id}',{pinned:${!n.pinned}})">${n.pinned ? 'إلغاء التثبيت' : 'تثبيت'}</button><button class="btn soft sm" onclick="upNote('${n.id}',{archived:${!n.archived}})">${n.archived ? 'استرجاع' : 'أرشفة'}</button><button class="btn del sm" onclick="delNote('${n.id}')">حذف</button></div></div>`).join('') || '<div class="card sub">لا توجد ملاحظات.</div>'}</div>`;
+    <div class="row" style="margin-top:8px"><button class="btn soft sm" onclick="upNote('${n.id}',{pinned:${!n.pinned}})">${n.pinned ? 'إلغاء التثبيت' : 'تثبيت'}</button><button class="btn soft sm" onclick="upNote('${n.id}',{archived:${!n.archived}})">${n.archived ? 'استرجاع' : 'أرشفة'}</button><button class="btn del sm" onclick="delNote('${n.id}')">حذف</button></div></div>`).join('') || '<div class="card sub empty">لا توجد ملاحظات.</div>'}</div>`;
   },
 
   async calendar() {
@@ -360,7 +364,7 @@ const V = {
     ${cells.map(d => d ? `<div onclick="cal.day='${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}T10:00';render()" style="padding:6px 0;border-radius:10px;cursor:pointer;background:${items.some(i => i.day === d) ? 'var(--pk)' : 'transparent'}">${d}<div style="display:flex;gap:2px;justify-content:center;min-height:6px">${items.filter(i => i.day === d).slice(0, 4).map(i => `<i style="width:6px;height:6px;border-radius:9px;background:${i.order ? '#9A8C96' : OC[i.owner]}"></i>`).join('')}</div></div>` : '<div></div>').join('')}</div>
     <div class="row sub" style="margin-top:8px">${Object.entries(ON).map(([k, v]) => `<span><i style="display:inline-block;width:8px;height:8px;border-radius:9px;background:${OC[k]}"></i> ${v}</span>`).join('')}<span>● موعد طلب</span></div></div>
     <div class="card dash"><h3>موعد جديد</h3><div class="grid"><input id="ev_t" placeholder="العنوان"><input id="ev_d" type="datetime-local" value="${cal.day}"><select id="ev_o"><option value="shared">مشترك</option><option value="rama">راما</option><option value="maryam">مريم</option></select><input id="ev_n" placeholder="تفاصيل (اختياري)"></div><button class="btn" style="margin-top:10px" onclick="addEvent()">إضافة الموعد</button></div>
-    ${items.map(i => `<div class="card ${i.order ? 'click' : ''}" ${i.order ? `onclick="go('order','${i.order}')"` : ''}><div class="row"><b class="grow">${i.day} · ${esc(i.t)}</b>${i.order ? '' : `<span class="tag" style="background:${OC[i.owner]};color:#fff">${ON[i.owner]}</span>`}</div>${i.order ? '' : `<div class="sub">${i.time} ${esc(i.d || '')}</div><button class="btn del sm" style="margin-top:6px" onclick="delEvent('${i.id}')">حذف</button>`}</div>`).join('') || '<div class="card sub">لا مواعيد هذا الشهر.</div>'}`;
+    ${items.map(i => `<div class="card ${i.order ? 'click' : ''}" ${i.order ? `onclick="go('order','${i.order}')"` : ''}><div class="row"><b class="grow">${i.day} · ${esc(i.t)}</b>${i.order ? '' : `<span class="tag" style="background:${OC[i.owner]};color:#fff">${ON[i.owner]}</span>`}</div>${i.order ? '' : `<div class="sub">${i.time} ${esc(i.d || '')}</div><button class="btn del sm" style="margin-top:6px" onclick="delEvent('${i.id}')">حذف</button>`}</div>`).join('') || '<div class="card sub empty">لا مواعيد هذا الشهر.</div>'}`;
   },
 
   export() {
@@ -375,7 +379,14 @@ const V = {
     ${(data || []).map(a => { const d = a.new_data || a.old_data || {}, nm = d.name || d.title || d.customer_name || d.note || d.body || d.order_no || '';
       const ch = a.action === 'UPDATE' ? Object.keys(a.new_data).filter(k => k !== 'updated_at' && JSON.stringify(a.new_data[k]) !== JSON.stringify(a.old_data[k])).map(k => FL[k] || k).join('، ') : '';
       return `<div class="card"><div class="row"><b class="grow">${AL[a.action]} ${TL[a.table_name] || a.table_name}</b><span class="sub">${ago(a.created_at)}</span></div><div>${esc(String(nm).slice(0, 60))}</div>
-      <div class="sub">${esc(staff[a.actor]?.name || 'العميل أو النظام')}${ch ? ' · ' + esc(ch) : ''}</div><button class="btn soft sm" style="margin-top:6px" onclick="undoAudit(${a.id})">تراجع</button></div>`; }).join('') || '<div class="card sub">لا توجد تعديلات مسجلة.</div>'}`;
+      <div class="sub">${esc(staff[a.actor]?.name || 'العميل أو النظام')}${ch ? ' · ' + esc(ch) : ''}</div><button class="btn soft sm" style="margin-top:6px" onclick="undoAudit(${a.id})">تراجع</button></div>`; }).join('') || '<div class="card sub empty">لا توجد تعديلات مسجلة.</div>'}`;
+  },
+
+  async settings() {
+    const { data } = await sb.from('settings').select('id,value'), S = Object.fromEntries((data || []).map(r => [r.id, r.value]));
+    return `<h2>الإعدادات</h2><div class="stitch"></div><div class="sub" style="margin-bottom:10px">التغيير يُحفظ مباشرة. نسبة المدخرات والتكاليف تؤثر على الطلبات التي ستكتمل بعد التغيير فقط.</div>
+    ${SETS.map(([k, l, t]) => t === 'bool' ? `<div class="card row"><span class="grow">${l}</span><input type="checkbox" style="width:24px;height:24px" ${S[k] === true ? 'checked' : ''} onchange="saveSet('${k}',this.checked,'bool')"></div>`
+      : `<div class="card"><label class="sub">${l}</label><input ${t === 'num' ? 'type="number" step="any"' : ''} value="${esc(S[k] ?? '')}" onchange="saveSet('${k}',this.value,'${t}')"></div>`).join('')}`;
   },
 
   async chat() {
@@ -389,7 +400,7 @@ const V = {
   async notifs() {
     const { data } = await sb.from('notifications').select('*').order('created_at', { ascending: false }).limit(60);
     return `<div class="row"><h2 class="grow">التنبيهات</h2><button class="btn soft sm" onclick="readAll()">تحديد الكل كمقروء</button></div>
-    ${(data || []).map(n => `<div class="card click" style="${n.read_at ? 'opacity:.6' : ''}" onclick="openNotif('${n.id}','${esc(n.link || '')}')"><b>${esc(n.title)}</b><div class="sub">${esc(n.body || '')} · ${ago(n.created_at)}</div></div>`).join('') || '<div class="card sub">لا توجد تنبيهات.</div>'}`;
+    ${(data || []).map(n => `<div class="card click" style="${n.read_at ? 'opacity:.6' : ''}" onclick="openNotif('${n.id}','${esc(n.link || '')}')"><b>${esc(n.title)}</b><div class="sub">${esc(n.body || '')} · ${ago(n.created_at)}</div></div>`).join('') || '<div class="card sub empty">لا توجد تنبيهات.</div>'}`;
   }
 };
 
@@ -552,6 +563,11 @@ async function exportAll() {
   try { const out = { exported_at: new Date().toISOString() }; for (const t of ['orders', 'order_items', 'order_item_progress', 'order_events', 'products', 'product_private', 'product_materials', 'inventory_items', 'inventory_movements', 'finance_entries', 'pickup_locations', 'offers', 'reviews', 'notes', 'calendar_events', 'settings']) out[t] = await fetchAll(t); download(`petali-backup-${today()}.json`, JSON.stringify(out, null, 1), 'application/json'); toast('تم تنزيل النسخة'); } catch (e) { toast(e.message); }
 }
 async function undoAudit(id) { if (!confirm('التراجع عن هذا التعديل؟')) return; const { error } = await sb.rpc('undo_audit', { p_audit_id: id }); if (error) return toast('تعذّر التراجع: ' + error.message); toast('تم التراجع'); render(); }
+async function saveSet(k, v, t) {
+  if (t === 'num') { v = Number(v); if (isNaN(v) || v < 0) return toast('اكتبي رقمًا صحيحًا'); }
+  if (t === 'text' && !String(v).trim()) return toast('لا يمكن أن يكون فارغًا');
+  const { error } = await sb.from('settings').upsert({ id: k, value: v }); if (error) return toast(error.message); toast('تم الحفظ');
+}
 boot();
 </script>
 </body>
