@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>مساحة بيتالي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{--mv:#A86B9E;--mv-l:#E8D5E5;--pk:#F4DDE5;--pe:#F7E1D7;--bg:#FFF9F4;--card:#FFFCFA;--tx:#554852;--tx2:#9A8C96;--ok:#7FA38A;--warn:#C9776B}
+*{box-sizing:border-box;margin:0}
+html,body{background:var(--bg);color:var(--tx);font-family:Tajawal,system-ui,sans-serif;font-size:16px}
+body{padding:env(safe-area-inset-top) 0 calc(76px + env(safe-area-inset-bottom))}
+button,input,select,textarea{font:inherit;color:inherit}
+h2{font-size:1.25rem;margin:4px 0 12px}h3{font-size:1rem;margin-bottom:8px}
+.wrap{max-width:860px;margin:0 auto;padding:14px}
+.top{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:2px dashed var(--mv-l);background:var(--card);position:sticky;top:0;z-index:5}
+.top img{height:34px}.top b{flex:1;color:var(--mv)}
+.card{background:var(--card);border:1px solid var(--mv-l);border-radius:16px;padding:14px;margin-bottom:12px}
+.card.dash{border:2px dashed var(--mv-l)}
+.click{cursor:pointer;transition:border-color .15s}.click:active,.click:hover{border-color:var(--mv)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.grow{flex:1;min-width:0}
+.sub{color:var(--tx2);font-size:.85rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.btn{background:var(--mv);color:#fff;border:0;border-radius:12px;padding:10px 16px;cursor:pointer;font-weight:700}
+.btn.soft{background:var(--mv-l);color:var(--tx)}.btn.sm{padding:6px 12px;font-size:.9rem}.btn.del{background:var(--pk);color:var(--warn)}
+.btn.on{background:var(--mv);color:#fff}
+input,select,textarea{background:#fff;border:1px solid var(--mv-l);border-radius:12px;padding:10px 12px;width:100%}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--mv);outline-offset:1px}
+.tag{display:inline-block;padding:2px 10px;border-radius:99px;background:var(--pe);font-size:.8rem}
+.tag.s-new,.tag.s-awaiting_confirmation{background:var(--pk)}.tag.s-in_progress{background:var(--mv-l)}
+.tag.s-ready,.tag.s-completed,.tag.s-final_confirmed{background:#DDEBDF}.tag.s-cancelled{background:#eee;color:var(--tx2)}
+.bar{height:8px;background:var(--mv-l);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--mv)}
+.stitch{height:12px;margin:10px 0;background:repeating-linear-gradient(90deg,var(--mv) 0 8px,transparent 8px 16px);-webkit-mask:linear-gradient(#000,#000);opacity:.35;border-radius:6px;height:3px}
+.nav{position:fixed;bottom:0;inset-inline:0;display:flex;background:var(--card);border-top:2px dashed var(--mv-l);padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:6}
+.nav button{flex:1;background:none;border:0;padding:6px 2px;color:var(--tx2);font-size:.8rem;position:relative;cursor:pointer}
+.nav button.on{color:var(--mv);font-weight:700}.nav span.n{display:block;font-size:1.25rem}
+.badge{position:absolute;top:0;inset-inline-end:22%;background:var(--warn);color:#fff;border-radius:99px;font-size:.7rem;padding:0 6px}
+.login{min-height:100vh;display:grid;place-items:center;padding:20px}
+.login .card{max-width:380px;width:100%;text-align:center;border:2px dashed var(--mv-l)}
+.login img{height:84px;margin:6px auto 4px;display:block}
+.acc{display:flex;gap:10px;margin:14px 0}.acc button{flex:1;padding:16px 8px;border-radius:14px;border:2px solid var(--mv-l);background:#fff;cursor:pointer;font-weight:700}
+.acc button.on{border-color:var(--mv);background:var(--mv-l)}
+.err{color:var(--warn);min-height:1.2em;margin-top:8px;font-size:.9rem}
+.bub{max-width:80%;padding:8px 12px;border-radius:14px;margin:6px 0;background:var(--mv-l)}.bub.me{background:var(--pk);margin-inline-start:auto}
+.tl{border-inline-start:2px dashed var(--mv-l);padding-inline-start:12px;margin-inline-start:6px}.tl div{margin-bottom:10px}
+.low{color:var(--warn);font-weight:700}
+#toast{position:fixed;bottom:90px;inset-inline:0;margin:auto;width:max-content;max-width:90%;background:var(--tx);color:#fff;padding:10px 16px;border-radius:12px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9}
+#toast.show{opacity:1}
+@media(min-width:700px){.nav{max-width:860px;margin:auto;border-radius:16px 16px 0 0;border:2px dashed var(--mv-l);border-bottom:0}}
+</style>
+</head>
+<body>
+<div id="app"></div><div id="toast"></div>
+<script>
+/* ===== إعدادات: ضعي هنا الرابط والمفتاح العام (anon) فقط. لا تضعي أي مفتاح سري. ===== */
+const CFG = {
+  url: 'YOUR_SUPABASE_URL',
+  key: 'YOUR_SUPABASE_ANON_KEY',
+  logo: 'petali-logo.png',
+  accounts: { rama: { name: 'راما', email: 'RAMA_EMAIL' }, maryam: { name: 'مريم', email: 'MARYAM_EMAIL' } }
+};
+const sb = supabase.createClient(CFG.url, CFG.key);
+const $ = s => document.querySelector(s), app = $('#app');
+const ST = { new:'جديد', awaiting_confirmation:'بانتظار التأكيد', final_confirmed:'تأكيد نهائي', in_progress:'قيد التنفيذ', ready:'جاهز للاستلام', completed:'مكتمل', cancelled:'ملغي' };
+const EX = { rama:'راما', maryam:'مريم', both:'راما ومريم' };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ago = d => { const m = (Date.now() - new Date(d)) / 6e4; return m < 1 ? 'الآن' : m < 60 ? `منذ ${Math.floor(m)} دقيقة` : m < 1440 ? `منذ ${Math.floor(m/60)} ساعة` : `منذ ${Math.floor(m/1440)} يوم`; };
+const money = n => Number(n || 0).toFixed(2) + ' ر.س';
+const pct = (d, q) => q ? Math.min(100, Math.round(100 * d / q)) : 0;
+let me = null, staff = {}, view = 'home', arg = null, picked = null, unread = 0, draft = '', filt = { q:'', st:'', ex:'' }, timer;
+function toast(t) { const e = $('#toast'); e.textContent = t; e.classList.add('show'); setTimeout(() => e.classList.remove('show'), 2600); }
+const logo = () => `<img src="${CFG.logo}" alt="بيتالي" onerror="this.style.display='none'">`;
+
+/* ---------- الدخول ---------- */
+function loginView(msg = '') {
+  app.innerHTML = `<div class="login"><div class="card">${logo()}<h2>مساحة بيتالي</h2><div class="sub">اختاري حسابك ثم اكتبي كلمة المرور</div>
+  <div class="acc">${Object.entries(CFG.accounts).map(([k, a]) => `<button class="${picked === k ? 'on' : ''}" onclick="pick('${k}')">${a.name}</button>`).join('')}</div>
+  ${picked ? `<input id="pw" type="password" placeholder="كلمة المرور" autocomplete="current-password" onkeydown="if(event.key==='Enter')signIn()"><button class="btn" style="width:100%;margin-top:10px" onclick="signIn()">دخول</button>` : ''}
+  <div class="err" id="err">${esc(msg)}</div></div></div>`;
+  if (picked) $('#pw').focus();
+}
+function pick(k) { picked = k; loginView(); }
+async function signIn() {
+  const { error } = await sb.auth.signInWithPassword({ email: CFG.accounts[picked].email, password: $('#pw').value });
+  if (error) return loginView('كلمة المرور غير صحيحة، جرّبي مرة ثانية.');
+  boot();
+}
+async function signOut() { await sb.auth.signOut(); location.reload(); }
+
+/* ---------- التشغيل ---------- */
+async function boot() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return loginView();
+  const { data } = await sb.from('staff').select('id,key,name');
+  (data || []).forEach(s => staff[s.id] = s);
+  me = staff[session.user.id];
+  if (!me) { await sb.auth.signOut(); return loginView('هذا الحساب غير مصرّح له بدخول المساحة.'); }
+  app.innerHTML = `<div class="top">${logo()}<b>مساحة بيتالي</b><span class="sub">${esc(me.name)}</span><button class="btn soft sm" onclick="signOut()">خروج</button></div>
+  <div class="wrap" id="main"></div><div class="nav" id="nav"></div>`;
+  sb.rpc('generate_due_alerts');
+  await countUnread(); realtime(); go('home');
+}
+async function countUnread() {
+  const { count } = await sb.from('notifications').select('id', { count: 'exact', head: true }).is('read_at', null);
+  unread = count || 0; drawNav();
+}
+function drawNav() {
+  const items = [['home','🏠','الرئيسية'],['orders','🧶','الطلبات'],['inventory','📦','المخزون'],['chat','💬','الشات'],['notifs','🔔','التنبيهات']];
+  $('#nav').innerHTML = items.map(([k, i, t]) => `<button class="${view === k || (k === 'orders' && view === 'order') ? 'on' : ''}" onclick="go('${k}')"><span class="n">${i}</span>${t}${k === 'notifs' && unread ? `<b class="badge">${unread}</b>` : ''}</button>`).join('');
+}
+async function go(v, a) { view = v; arg = a; drawNav(); await render(); scrollTo(0, 0); }
+async function render() {
+  const m = $('#main'); if (!m) return;
+  try { m.innerHTML = await V[view](arg); } catch (e) { m.innerHTML = `<div class="card">تعذّر تحميل الصفحة: ${esc(e.message)}</div>`; }
+  if (view === 'chat') { const b = $('#msgs'); if (b) b.scrollTop = b.scrollHeight; }
+}
+function realtime() {
+  const soft = () => { clearTimeout(timer); timer = setTimeout(() => ['home','orders','order','inventory'].includes(view) && !document.activeElement?.matches('input,textarea,select') && render(), 500); };
+  const ch = sb.channel('petali');
+  ['orders','order_item_progress','order_events','inventory_items'].forEach(t => ch.on('postgres_changes', { event:'*', schema:'public', table:t }, soft));
+  ch.on('postgres_changes', { event:'INSERT', schema:'public', table:'messages' }, () => view === 'chat' && render());
+  ch.on('postgres_changes', { event:'INSERT', schema:'public', table:'notifications', filter:`recipient_id=eq.${me.id}` }, p => { unread++; drawNav(); toast(p.new.title); if (view === 'notifs') render(); });
+  ch.subscribe();
+}
+
+/* ---------- الصفحات ---------- */
+const V = {
+  async home() {
+    const [o, p, low, bal, ev] = await Promise.all([
+      sb.from('orders').select('id,order_no,customer_name,status,executor,due_date').is('deleted_at', null).not('status', 'in', '(completed,cancelled)').order('due_date', { nullsFirst: false }),
+      sb.from('v_order_item_progress').select('order_id,quantity,done_total'),
+      sb.from('v_inventory_low').select('id,name,quantity,unit'),
+      sb.from('v_finance_balances').select('*'),
+      sb.from('order_events').select('text,actor_name,created_at,order_id').order('created_at', { ascending: false }).limit(6)]);
+    const prog = {}; (p.data || []).forEach(r => { const x = prog[r.order_id] ||= { q: 0, d: 0 }; x.q += r.quantity; x.d += r.done_total; });
+    const orders = o.data || [], soon = orders.filter(r => r.due_date && (new Date(r.due_date) - Date.now()) / 864e5 <= 2);
+    const b = Object.fromEntries((bal.data || []).map(r => [r.account, r.balance]));
+    return `<h2>أهلًا ${esc(me.name)} 🌸</h2><div class="stitch"></div>
+    <div class="grid">
+      <div class="card click" onclick="go('orders')"><h3>الطلبات الحالية</h3><div style="font-size:2rem;font-weight:700;color:var(--mv)">${orders.length}</div><div class="sub">${soon.length ? `${soon.length} تحتاج عملًا قريبًا` : 'لا شيء مستعجل'}</div></div>
+      <div class="card click" onclick="go('inventory')"><h3>المواد الناقصة</h3><div style="font-size:2rem;font-weight:700" class="${(low.data || []).length ? 'low' : ''}">${(low.data || []).length}</div><div class="sub">${(low.data || []).slice(0, 3).map(i => esc(i.name)).join('، ') || 'كل المواد كافية'}</div></div>
+      <div class="card dash"><h3>صندوق ومدخرات بيتالي</h3><div style="font-size:1.6rem;font-weight:700;color:var(--mv)">${money(b.savings)}</div><div class="sub">أرباح راما ${money(b.rama)} · أرباح مريم ${money(b.maryam)}</div></div>
+    </div>
+    <h2 style="margin-top:8px">الطلبات الجارية</h2>
+    ${orders.map(r => { const x = prog[r.id] || { q: 0, d: 0 }; return `<div class="card click" onclick="go('order','${r.id}')"><div class="row"><b class="grow">${esc(r.customer_name)}</b><span class="tag s-${r.status}">${ST[r.status]}</span></div>
+      <div class="sub" style="margin:4px 0 8px">${r.executor ? 'تنفذها: ' + EX[r.executor] : 'لم تُحدَّد المنفذة'}${r.due_date ? ' · الموعد ' + r.due_date : ''}</div><div class="bar"><i style="width:${pct(x.d, x.q)}%"></i></div></div>`; }).join('') || '<div class="card sub">لا توجد طلبات جارية.</div>'}
+    <h2>آخر النشاطات</h2>
+    <div class="card"><div class="tl">${(ev.data || []).map(e => `<div class="click" onclick="go('order','${e.order_id}')">${esc(e.text)}<div class="sub">${esc(e.actor_name || '')} · ${ago(e.created_at)}</div></div>`).join('') || '<span class="sub">لا نشاط بعد.</span>'}</div></div>`;
+  },
+
+  async orders() {
+    const { data } = await sb.from('orders').select('id,order_no,customer_name,status,executor,total,due_date,created_at,pickup_location_name').is('deleted_at', null).order('created_at', { ascending: false });
+    const q = filt.q.trim().toLowerCase();
+    const rows = (data || []).filter(r => (!q || (r.order_no + r.customer_name).toLowerCase().includes(q)) && (!filt.st || r.status === filt.st) && (!filt.ex || r.executor === filt.ex));
+    return `<h2>الطلبات</h2>
+    <input placeholder="ابحثي برقم الطلب أو اسم العميل" value="${esc(filt.q)}" oninput="filt.q=this.value;clearTimeout(timer);timer=setTimeout(()=>{render().then(()=>{const i=document.querySelector('#main input');i.focus();i.setSelectionRange(99,99)})},350)">
+    <div class="row" style="margin:10px 0"><select onchange="filt.st=this.value;render()" class="grow"><option value="">كل الحالات</option>${Object.entries(ST).map(([k, v]) => `<option value="${k}" ${filt.st === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
+    <select onchange="filt.ex=this.value;render()" class="grow"><option value="">كل المنفذات</option>${Object.entries(EX).map(([k, v]) => `<option value="${k}" ${filt.ex === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+    ${rows.map(r => `<div class="card click" onclick="go('order','${r.id}')"><div class="row"><b>${esc(r.order_no)}</b><span class="grow">${esc(r.customer_name)}</span><span class="tag s-${r.status}">${ST[r.status]}</span></div>
+    <div class="sub">${money(r.total)} · ${esc(r.pickup_location_name || '')} · ${ago(r.created_at)}</div></div>`).join('') || '<div class="card sub">لا توجد طلبات مطابقة.</div>'}`;
+  },
+
+  async order(id) {
+    const [o, it, pg, ev, nd] = await Promise.all([
+      sb.from('orders').select('*').eq('id', id).single(),
+      sb.from('order_items').select('*').eq('order_id', id).order('created_at'),
+      sb.from('v_order_item_progress').select('*').eq('order_id', id),
+      sb.from('order_events').select('*').eq('order_id', id).order('created_at', { ascending: false }),
+      sb.rpc('order_material_needs', { p_order: id })]);
+    const r = o.data, P = Object.fromEntries((pg.data || []).map(x => [x.order_item_id, x]));
+    const short = (nd.data || []).filter(n => Number(n.shortage) > 0 && !r.materials_deducted_at);
+    const tq = (it.data || []).reduce((s, i) => s + i.quantity, 0), td = (pg.data || []).reduce((s, i) => s + i.done_total, 0);
+    return `<button class="btn soft sm" onclick="go('orders')">← الطلبات</button>
+    <div class="card" style="margin-top:10px"><div class="row"><h2 class="grow" style="margin:0">${esc(r.customer_name)}</h2><span class="tag s-${r.status}">${ST[r.status]}</span></div>
+    <div class="sub" dir="ltr" style="text-align:right">${esc(r.customer_phone)}</div>
+    <div class="sub">الاستلام: ${esc(r.pickup_location_name || '—')} · الإجمالي ${money(r.total)}${r.deposit_required ? ' · <b class="low">يُنصح بعربون</b>' : ''}</div>
+    ${r.customer_notes ? `<div style="margin-top:8px">ملاحظة العميل: ${esc(r.customer_notes)}</div>` : ''}</div>
+    ${short.length ? `<div class="card dash low">مواد غير كافية لهذا الطلب: ${short.map(n => `${esc(n.item_name)} (ينقص ${Number(n.shortage)} ${esc(n.unit)})`).join('، ')}</div>` : ''}
+    <div class="card"><h3>الحالة والتنفيذ</h3>
+      <select onchange="setStatus('${r.id}',this.value)">${Object.entries(ST).map(([k, v]) => `<option value="${k}" ${r.status === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
+      <div class="row" style="margin:10px 0">${Object.entries(EX).map(([k, v]) => `<button class="btn soft sm ${r.executor === k ? 'on' : ''}" onclick="upd('${r.id}',{executor:'${k}'})">${v}</button>`).join('')}</div>
+      <label class="sub">الموعد المستهدف</label><input type="date" value="${r.due_date || ''}" onchange="upd('${r.id}',{due_date:this.value||null})"></div>
+    <div class="card"><h3>المنتجات</h3><div class="bar" style="margin-bottom:10px"><i style="width:${pct(td, tq)}%"></i></div>
+    ${(it.data || []).map(i => { const x = P[i.id] || { done_rama: 0, done_maryam: 0, done_total: 0, remaining: i.quantity };
+      return `<div style="padding:10px 0;border-top:1px dashed var(--mv-l)"><div class="row"><b class="grow">${esc(i.product_name)}${i.is_gift ? ' 🎁' : ''}</b><button class="btn sm" onclick="addProg('${i.id}')">+ سجّلي إنجاز</button></div>
+      <div class="sub">${Object.entries(i.options || {}).map(([k, v]) => esc(k) + ': ' + esc(v)).join(' · ')}</div>
+      <div class="sub">المطلوب ${i.quantity} · راما ${x.done_rama} · مريم ${x.done_maryam} · المنجز ${x.done_total} · المتبقي ${x.remaining}</div></div>`; }).join('')}</div>
+    <div class="card"><div class="row"><h3 class="grow">السجل الزمني</h3><button class="btn soft sm" onclick="addNote('${r.id}')">+ ملاحظة</button></div>
+    <div class="tl">${(ev.data || []).map(e => `<div>${esc(e.text)}<div class="sub">${esc(e.actor_name || '')} · ${new Date(e.created_at).toLocaleString('ar-SA')}</div></div>`).join('')}</div></div>
+    <button class="btn del" onclick="delOrder('${r.id}')">حذف الطلب</button>`;
+  },
+
+  async inventory() {
+    const { data } = await sb.from('inventory_items').select('*').is('deleted_at', null).order('name');
+    return `<h2>المخزون</h2>${(data || []).map(i => { const low = Number(i.quantity) <= Number(i.min_quantity);
+      return `<div class="card"><div class="row"><b class="grow">${esc(i.name)}</b><span class="${low ? 'low' : ''}">${Number(i.quantity)} ${esc(i.unit)}</span></div>
+      <div class="sub">التنبيه عند ${Number(i.min_quantity)} · التكلفة ${Number(i.unit_cost).toFixed(2)} للوحدة</div>
+      <div class="row" style="margin-top:8px"><button class="btn soft sm" onclick="adjust('${i.id}')">تعديل الكمية</button></div></div>`; }).join('') || '<div class="card sub">لا توجد مواد بعد.</div>'}`;
+  },
+
+  async chat() {
+    const { data } = await sb.from('messages').select('*').order('created_at').limit(150);
+    sb.from('chat_reads').upsert({ staff_id: me.id, last_read_at: new Date().toISOString() });
+    sb.from('notifications').update({ read_at: new Date().toISOString() }).eq('type', 'message').is('read_at', null).then(countUnread);
+    return `<h2>الشات الخاص</h2><div class="card" id="msgs" style="height:55vh;overflow:auto">${(data || []).map(m => `<div class="bub ${m.sender_id === me.id ? 'me' : ''}">${esc(m.body)}<div class="sub">${esc(staff[m.sender_id]?.name || '')} · ${ago(m.created_at)}</div></div>`).join('') || '<span class="sub">ابدئي المحادثة.</span>'}</div>
+    <div class="row"><input class="grow" id="msg" placeholder="اكتبي رسالة" value="${esc(draft)}" oninput="draft=this.value" onkeydown="if(event.key==='Enter')send()"><button class="btn" onclick="send()">إرسال</button></div>`;
+  },
+
+  async notifs() {
+    const { data } = await sb.from('notifications').select('*').order('created_at', { ascending: false }).limit(60);
+    return `<div class="row"><h2 class="grow">التنبيهات</h2><button class="btn soft sm" onclick="readAll()">تحديد الكل كمقروء</button></div>
+    ${(data || []).map(n => `<div class="card click" style="${n.read_at ? 'opacity:.6' : ''}" onclick="openNotif('${n.id}','${esc(n.link || '')}')"><b>${esc(n.title)}</b><div class="sub">${esc(n.body || '')} · ${ago(n.created_at)}</div></div>`).join('') || '<div class="card sub">لا توجد تنبيهات.</div>'}`;
+  }
+};
+
+/* ---------- الإجراءات ---------- */
+async function upd(id, patch) { const { error } = await sb.from('orders').update(patch).eq('id', id); if (error) return toast(error.message); render(); }
+function setStatus(id, s) { if (s === 'cancelled' && !confirm('إلغاء الطلب؟')) return render(); if (s === 'completed' && !confirm('سيتم احتساب الأرباح وتوزيعها عند الاكتمال. متأكدة؟')) return render(); upd(id, { status: s }); }
+async function addProg(itemId) {
+  const q = parseInt(prompt('كم قطعة أنجزتِ؟ (اكتبي رقمًا سالبًا للتصحيح)')); if (!q) return;
+  const { error } = await sb.from('order_item_progress').insert({ order_item_id: itemId, staff_id: me.id, quantity: q });
+  if (error) return toast(error.message.includes('exceeds') ? 'الكمية أكبر من المطلوب' : error.message.includes('negative') ? 'لا يمكن أن يصبح الإنجاز أقل من صفر' : error.message);
+  render();
+}
+async function addNote(id) {
+  const t = prompt('اكتبي الملاحظة'); if (!t) return;
+  const { error } = await sb.from('order_events').insert({ order_id: id, kind: 'note', text: 'ملاحظة: ' + t, actor_id: me.id, actor_name: me.name });
+  if (error) return toast(error.message); render();
+}
+async function delOrder(id) {
+  if (!confirm('حذف الطلب؟ يبقى محفوظًا ويمكن استرجاعه لاحقًا.')) return;
+  const { error } = await sb.from('orders').update({ deleted_at: new Date().toISOString() }).eq('id', id);
+  if (error) return toast(error.message); toast('تم الحذف'); go('orders');
+}
+async function adjust(id) {
+  const d = parseFloat(prompt('اكتبي التغيير في الكمية (+5 للإضافة، -2 للخصم)')); if (!d) return;
+  const { error } = await sb.from('inventory_movements').insert({ item_id: id, delta: d, reason: 'adjustment', note: 'تعديل يدوي', created_by: me.id });
+  if (error) return toast(error.message); render();
+}
+async function send() {
+  const t = draft.trim(); if (!t) return; draft = '';
+  const { error } = await sb.from('messages').insert({ sender_id: me.id, body: t }); if (error) return toast(error.message); render();
+}
+async function readAll() { await sb.from('notifications').update({ read_at: new Date().toISOString() }).is('read_at', null); await countUnread(); render(); }
+async function openNotif(id, link) {
+  await sb.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', id); countUnread();
+  const [k, a] = link.split('/'); if (k === 'orders' && a) go('order', a); else if (k === 'inventory') go('inventory'); else if (k === 'chat') go('chat'); else render();
+}
+boot();
+</script>
+</body>
+</html>
