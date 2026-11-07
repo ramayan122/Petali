@@ -112,9 +112,9 @@ async function signOut() { await sb.auth.signOut(); location.reload(); }
 async function boot() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return loginView();
-  const { data } = await sb.from('staff').select('id,key,name');
-  (data || []).forEach(s => staff[s.id] = s);
-  me = staff[session.user.id];
+ const { data } = await sb.from('staff').select('id,key,name');
+  (data || []).forEach(s => staff[s.key] = s);
+  me = staff[picked];
   if (!me) { await sb.auth.signOut(); return loginView('هذا الحساب غير مصرّح له بدخول المساحة.'); }
   app.innerHTML = `<div class="top">${logo()}<b>مساحة بيتالي</b><button class="btn soft sm" onclick="go('chat')">💬</button><button class="btn soft sm" id="bell" onclick="go('notifs')">🔔</button><span class="sub">${esc(me.name)}</span><button class="btn soft sm" onclick="signOut()">خروج</button></div>
   <div class="wrap" id="main"></div><div class="nav" id="nav"></div>`;
