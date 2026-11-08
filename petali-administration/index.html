@@ -88,6 +88,29 @@ body{padding:0 0 calc(72px + env(safe-area-inset-bottom))}
 #toast.bad{background:#B4574B}
 .btn .lucide{margin-inline-end:4px}.card h3 .lucide{margin-inline-end:6px;color:var(--mv)}
 .btn:hover{filter:brightness(1.06)}
+.tabs{display:flex;gap:4px;overflow-x:auto;margin-bottom:14px;border-bottom:1px solid var(--mv-l)}.tabs button{background:none;border:0;padding:10px 14px;color:var(--tx2);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;font-weight:600}.tabs button.on{color:var(--mv);border-color:var(--mv)}
+.cnt{display:inline-block;background:var(--pe);color:var(--tx);border-radius:99px;font-size:.74rem;padding:0 8px;min-width:20px;text-align:center}
+.onum{background:var(--pe);border-radius:10px;padding:2px 10px;letter-spacing:.03em;font-size:.9rem}
+.selbar{position:sticky;top:60px;z-index:4;display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--mv-l);border-radius:14px;padding:8px 12px;margin-bottom:10px}
+.hrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px dashed var(--mv-l)}.hrow:first-of-type{border-top:0}
+.actcard{border:2px solid var(--mv)}details.card summary{cursor:pointer;font-weight:700}
+.fsec{font-weight:700;margin:16px 0 2px;color:var(--mv);font-size:.92rem;border-bottom:1px dashed var(--mv-l);padding-bottom:4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chips button{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border:1.5px solid var(--mv-l);border-radius:12px;background:var(--card);cursor:pointer;color:var(--tx)}.chips button.on{background:var(--mv);border-color:var(--mv);color:var(--onmv,#fff)}
+.chips.seg{gap:0}.chips.seg button{border-radius:0;flex:1}.chips.seg button:first-child{border-radius:12px 0 0 12px}.chips.seg button:last-child{border-radius:0 12px 12px 0}
+.sws{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:6px}.sw2{width:34px;height:34px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--mv-l);cursor:pointer;padding:0;display:inline-grid;place-items:center}.sw2.on{box-shadow:0 0 0 3px var(--mv)}
+.sw2.cust{background:conic-gradient(red,yellow,lime,aqua,blue,magenta,red);position:relative;overflow:hidden;color:#fff}.sw2.cust input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.chipx{border:0;background:none;color:var(--tx2);cursor:pointer;text-decoration:underline}
+.sw{display:inline-block;width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.18);vertical-align:-2px}.sw.big{width:26px;height:26px}
+.chipsrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.chipv{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--mv-l);border-radius:99px;background:var(--card);font-size:.88rem}.chipv.off{opacity:.45;text-decoration:line-through}.chipv button{border:0;background:none;cursor:pointer;color:var(--tx2);padding:0;display:inline-grid}.chipv .lucide{width:14px;height:14px}
+.stp2{display:flex;align-items:center;border:1.5px solid var(--mv-l);border-radius:12px;background:#fff;overflow:hidden}.stp2 button{width:44px;height:44px;border:0;background:none;cursor:pointer;color:var(--tx)}.stp2 button:disabled{opacity:.3}.stp2 input{width:64px;border:0;text-align:center;border-radius:0;padding:8px 0;font-weight:700}
+.itm{border-top:1px dashed var(--mv-l);padding:14px 0}.itm:first-of-type{border-top:0}.th{width:56px;height:56px;border-radius:12px;object-fit:cover;background:var(--pe);display:grid;place-items:center;flex:none;color:var(--tx2)}
+.cnt2{font-weight:700;font-size:1.5rem;white-space:nowrap}.cnt2 small{font-size:.8rem;color:var(--tx2)}.cnt2.ok{color:var(--mv)}.bar.thick{height:12px}
+.chk{display:inline-flex;align-items:center;gap:8px}.chk input{width:20px;height:20px}
+.stickybar{position:sticky;bottom:calc(76px + env(safe-area-inset-bottom));display:flex;gap:8px;background:var(--card);border:1px solid var(--mv-l);border-radius:16px;padding:10px;margin-top:14px;z-index:6}
+@media(min-width:960px){.stickybar{bottom:10px}}
+.btn{color:var(--onmv,#fff)}.btn.soft{color:var(--tx)}.btn.del{color:var(--warn)}.btn.on,.si.on{color:var(--onmv,#fff)}
+html,body{font-size:var(--fs,16px)}.card{border-radius:var(--r,16px);padding:var(--pad,14px)}.btn,input,select,textarea,.ibtn{border-radius:calc(var(--r,16px) - 4px)}
+.top{background:color-mix(in srgb,var(--card) 94%,transparent)}
 </style>
 </head>
 <body>
@@ -102,14 +125,14 @@ const CFG = {
 };
 const sb = supabase.createClient(CFG.url, CFG.key);
 const $ = s => document.querySelector(s), app = $('#app');
-const ST = { new:'جديد', awaiting_confirmation:'بانتظار التأكيد', final_confirmed:'تأكيد نهائي', in_progress:'قيد التنفيذ', ready:'جاهز للاستلام', completed:'مكتمل', cancelled:'ملغي' };
+const ST = { new:'جديد', awaiting_confirmation:'جديد', final_confirmed:'مؤكد', in_progress:'قيد التنفيذ', ready:'جاهز للاستلام', completed:'مكتمل', cancelled:'ملغي' };
 const EX = { rama:'راما', maryam:'مريم', both:'راما ومريم' };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ago = d => { const m = (Date.now() - new Date(d)) / 6e4; return m < 1 ? 'الآن' : m < 60 ? `منذ ${Math.floor(m)} دقيقة` : m < 1440 ? `منذ ${Math.floor(m/60)} ساعة` : `منذ ${Math.floor(m/1440)} يوم`; };
 const money = n => Number(n || 0).toFixed(2) + ' ر.س';
 const pct = (d, q) => q ? Math.min(100, Math.round(100 * d / q)) : 0;
 const SETS = [['savings_percent','نسبة مدخرات بيتالي من كل طلب (%)','num'],['deduct_materials_cost','خصم تكلفة المواد من الربح قبل التقسيم (تذهب للمدخرات)','bool'],['deposit_enabled','تنبيه العربون للطلبات الكبيرة','bool'],['deposit_threshold','حد الطلب الكبير (ر.س): ما فوقه يُنصح بعربون','num'],['delivery_enabled','تفعيل التوصيل في موقع العملاء','bool'],['hourly_rate','أجر الساعة لاقتراح السعر (ر.س)','num'],['margin_percent','هامش الربح للقطعة المفردة (%)','num'],['wholesale_margin_percent','هامش الربح للجملة (%)','num'],['wholesale_min_qty','أقل كمية لتطبيق سعر الجملة','num'],['due_alert_days','التنبيه قبل موعد الإنجاز (بالأيام)','num'],['order_prefix','بادئة رقم الطلب (للطلبات الجديدة)','text'],['currency','رمز العملة','text']];
-let post = null, statP = 'month', showArch = false, cal = { y: new Date().getFullYear(), m: new Date().getMonth(), day: '' };
+let post = null, statT = 'over', catCache = [], catOK = true, pcat = 'all', statP = 'month', showArch = false, cal = { y: new Date().getFullYear(), m: new Date().getMonth(), day: '' };
 const NC = { mauve:'#F3EDE7', pink:'#F7E1D7', peach:'#E1EBE3' }, OC = { shared:'#5C7F6A', rama:'#D9A88F', maryam:'#8AA7B8' }, ON = { shared:'مشترك', rama:'راما', maryam:'مريم' };
 const TL = { products:'منتج', orders:'طلب', order_items:'بند طلب', inventory_items:'مادة', finance_entries:'قيد مالي', notes:'ملاحظة', offers:'عرض', reviews:'تقييم', calendar_events:'موعد', pickup_locations:'موقع استلام', product_materials:'مادة منتج', product_private:'تسعير منتج', settings:'إعداد' };
 const AL = { INSERT:'إضافة', UPDATE:'تعديل', DELETE:'حذف' };
@@ -129,13 +152,50 @@ const logo = () => `<img src="${CFG.logo}" alt="بيتالي" onerror="this.styl
 
 const ic = n => `<i data-lucide="${n}"></i>`;
 const icons = () => { try { lucide.createIcons(); } catch (e) {} };
-const NAV = [['', [['home','home','الرئيسية']]],
- ['العمل اليومي', [['orders','clipboard-list','الطلبات'],['products','shopping-bag','المنتجات'],['inventory','boxes','المخزون']]],
- ['المال والتحليل', [['finance','wallet','المالية'],['stats','bar-chart-3','الإحصاءات']]],
- ['التنظيم', [['calendar','calendar','الجدول المشترك'],['notes','sticky-note','لوحة الملاحظات'],['chat','message-circle','الشات الخاص']]],
- ['الإدارة', [['offers','tag','العروض والخصومات'],['reviews','star','تقييمات العملاء'],['locations','map-pin','مواقع الاستلام'],['export','download','التصدير والنسخ الاحتياطي'],['undo','undo-2','سجل التعديلات'],['settings','settings','الإعدادات']]]];
-const GRP = { order:'orders', neworder:'orders', product:'products', notifs:'' };
-const TITLES = Object.assign(Object.fromEntries(NAV.flatMap(g => g[1]).map(i => [i[0], i[2]])), { notifs:'التنبيهات', order:'تفاصيل الطلب', neworder:'طلب جديد', product:'المنتج' });
+const NAV = [['', [['home','home','الرئيسية'],['orders','clipboard-list','الطلبات'],['catalog','shopping-bag','المنتجات والمخزون'],['money','wallet','المالية والإحصاءات'],['org','calendar','الجدول والملاحظات والشات'],['admin','settings','الإعدادات']]]];
+const HUBS = { catalog:[['products','المنتجات'],['inventory','المخزون']], money:[['finance','المالية'],['stats','الإحصاءات']], org:[['calendar','الجدول'],['notes','الملاحظات'],['chat','الشات']], admin:[['look','المظهر'],['settings','الإعدادات العامة'],['locations','مواقع الاستلام'],['offers','العروض والخصومات'],['reviews','التقييمات'],['export','التصدير'],['undo','سجل التعديلات']] };
+const HT = { catalog:'products', money:'finance', org:'calendar', admin:'settings' };
+const HUB_OF = Object.fromEntries(Object.entries(HUBS).flatMap(([h, t]) => t.map(([k]) => [k, h])));
+const GRP = { order:'orders', neworder:'orders', product:'catalog', notifs:'' };
+const TITLES = { home:'الرئيسية', orders:'الطلبات', catalog:'المنتجات والمخزون', money:'المالية والإحصاءات', org:'الجدول والملاحظات والشات', admin:'الإعدادات', notifs:'التنبيهات', order:'تفاصيل الطلب', neworder:'طلب جديد', product:'المنتج' };
+const STU = { new:'جديد', final_confirmed:'مؤكد', in_progress:'قيد التنفيذ', ready:'جاهز للاستلام', completed:'مكتمل', cancelled:'ملغي' };
+const NEXT = { new:['final_confirmed','تأكيد الطلب','check-circle-2'], awaiting_confirmation:['final_confirmed','تأكيد الطلب','check-circle-2'], final_confirmed:['in_progress','بدء التنفيذ','play'], in_progress:['ready','جاهز للاستلام','package'], ready:['completed','تم التسليم','check'] };
+const fmtD = d => new Date(d).toLocaleDateString('ar-u-ca-gregory-nu-latn', { day: 'numeric', month: 'short', year: 'numeric' });
+const OTABS = [['new','جديد'],['run','قيد التنفيذ'],['ready','جاهز'],['done','مكتمل'],['all','الكل'],['trash','المحذوفة']];
+const inTab = (r, t) => t === 'trash' ? !!r.deleted_at : !r.deleted_at && (t === 'all' || (t === 'new' && ['new','awaiting_confirmation'].includes(r.status)) || (t === 'run' && ['final_confirmed','in_progress'].includes(r.status)) || (t === 'ready' && r.status === 'ready') || (t === 'done' && ['completed','cancelled'].includes(r.status)));
+let oTab = 'new', oSel = new Set(), oSelMode = false;
+const oCard = r => { const n = (r.order_items || []).reduce((t, i) => t + i.quantity, 0), nx = NEXT[r.status];
+  return `<div class="card ${oSelMode ? '' : 'click'}" ${oSelMode ? '' : `onclick="go('order','${r.id}')"`}><div class="row">${oSelMode ? `<input type="checkbox" style="width:22px;height:22px" ${oSel.has(r.id) ? 'checked' : ''} onchange="oPick('${r.id}',this.checked)">` : ''}<b dir="ltr" class="onum">${esc(r.order_no)}</b><b class="grow">${esc(r.customer_name)}</b><span class="tag s-${r.status}">${ST[r.status]}</span></div>
+  <div class="sub" style="margin:6px 0">${fmtD(r.created_at)} · ${n} قطعة · ${money(r.total)} · ${r.source === 'site' ? 'من الموقع' : 'يدوي'}${r.is_wholesale ? ' · جملة' : ''}${r.pickup_location_name ? ' · ' + esc(r.pickup_location_name) : ''}${r.due_date ? ' · الموعد ' + r.due_date : ''}</div>
+  ${r.deleted_at ? `<div class="row"><button class="btn soft sm" onclick="oRestore('${r.id}')">${ic('rotate-ccw')} استرجاع</button><button class="btn del sm" onclick="oPurge(['${r.id}'])">${ic('trash-2')} حذف نهائي</button></div>` : (nx && !oSelMode ? `<button class="btn sm" onclick="event.stopPropagation();advance('${r.id}')">${ic(nx[2])} ${nx[1]}</button>` : '')}</div>`; };
+const tabsBar = h => `<div class="tabs">${HUBS[h].map(([k, l]) => `<button class="${HT[h] === k ? 'on' : ''}" onclick="setTab('${h}','${k}')">${l}</button>`).join('')}</div>`;
+function setTab(h, k) { HT[h] = k; render(); }
+const COLORS = [['أبيض','#FFFFFF'],['كريمي','#F5EBDD'],['بيج','#D9C3A5'],['بني','#8B5E3C'],['أسود','#2B2B2B'],['رمادي','#9AA0A6'],['سماوي','#8EC5E8'],['أزرق','#3F6FB5'],['كحلي','#223A5E'],['أخضر','#6BAA75'],['زيتي','#7D8450'],['أصفر','#F2D262'],['برتقالي','#E9A15B'],['خوخي','#F3C7B0'],['وردي','#EFA6B8'],['أحمر','#C8514B'],['موفي','#9B7BB5']];
+const UNITS = ['كرة','متر','قطعة','علبة','كيس','رول','لفة'];
+let pfTab = 0;
+const THEMES = { sage:['الأخضر والخوخي',{primary:'#5C7F6A',bg:'#FFF9F4',card:'#FFFCFA',text:'#554852',soft:'#F3E9E1',border:'#E6D9CE'}], sand:['الرملي والبني',{primary:'#8A6A4F',bg:'#FBF6EF',card:'#FFFFFF',text:'#3F3630',soft:'#F1E7DA',border:'#E5D8C8'}], ocean:['الأزرق الهادئ',{primary:'#3E6A8A',bg:'#F5F8FA',card:'#FFFFFF',text:'#2D3A45',soft:'#E6EEF3',border:'#D5E0E8'}], slate:['الرمادي المحايد',{primary:'#4B5563',bg:'#F6F6F5',card:'#FFFFFF',text:'#26292E',soft:'#ECECEA',border:'#DDDCD8'}] };
+const THEME0 = { ...THEMES.sage[1], radius: 16, font: 16, dense: false };
+let theme = { ...THEME0 }, tT;
+const lum = h => { const c = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255).map(x => x <= .03928 ? x / 12.92 : Math.pow((x + .055) / 1.055, 2.4)); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
+function applyTheme(t) {
+  const r = document.documentElement.style, set = (k, v) => r.setProperty(k, v);
+  set('--mv', t.primary); set('--bg', t.bg); set('--card', t.card); set('--tx', t.text); set('--pe', t.soft); set('--pk', t.soft); set('--mv-l', t.border);
+  set('--tx2', `color-mix(in srgb, ${t.text} 58%, ${t.bg})`); set('--onmv', lum(t.primary) > .45 ? '#1f1f1f' : '#ffffff'); set('--r', t.radius + 'px'); set('--fs', t.font + 'px'); set('--pad', t.dense ? '10px' : '14px');
+  try { localStorage.setItem('petali_theme', JSON.stringify(t)); } catch (e) {}
+}
+try { const c = JSON.parse(localStorage.getItem('petali_theme')); if (c) { theme = { ...THEME0, ...c }; applyTheme(theme); } } catch (e) {}
+function tSet(k, v, re) { theme[k] = v; applyTheme(theme); clearTimeout(tT); tT = setTimeout(() => sb.from('settings').upsert({ id: 'theme_admin', value: theme }).then(r => r.error && toast(r.error.message)), 600); if (re) render(); }
+function setTheme(k) { theme = { ...theme, ...THEMES[k][1] }; applyTheme(theme); tSet('primary', theme.primary, true); }
+function tReset() { theme = { ...THEME0 }; applyTheme(theme); tSet('primary', theme.primary, true); }
+const hexOf = (opts, k, label) => { const g = (opts || []).find(g => g.name === k); return ((g && g.values) || []).find(v => v.label === label)?.hex || ''; };
+const itemCard = (i, x, opts) => { const q = i.quantity, d = x.done_total, mine = x['done_' + me.key] || 0, ok = d >= q;
+  return `<div class="itm"><div class="row" style="align-items:flex-start">${i.image_path ? `<img class="th" src="${imgUrl(i.image_path)}" alt="">` : `<span class="th">${ic('flower-2')}</span>`}<div class="grow"><b>${esc(i.product_name)}${i.is_gift ? ' ' + ic('gift') : ''}</b>
+  <div class="chipsrow">${Object.entries(i.options || {}).map(([k, v]) => { const h = hexOf(opts, k, v); return `<span class="chipv">${h ? `<i class="sw" style="background:${esc(h)}"></i>` : ''}${esc(k)}: ${esc(v)}</span>`; }).join('')}</div></div><div class="cnt2 ${ok ? 'ok' : ''}">${d}<small> / ${q}</small></div></div>
+  <div class="bar thick" style="margin-top:8px"><i style="width:${pct(d, q)}%"></i></div>
+  <div class="row" style="margin-top:10px"><div class="stp2"><button onclick="prog('${i.id}',-1,${mine})" aria-label="تصحيح: إنقاص">${ic('minus')}</button><input inputmode="numeric" value="${d}" aria-label="العدد المنجز" onchange="progSet('${i.id}',this.value,${d},${mine},${q})"><button onclick="prog('${i.id}',1,${mine})" ${ok ? 'disabled' : ''} aria-label="أنجزت واحدة">${ic('plus')}</button></div>
+  ${ok ? `<span class="tag s-ready">${ic('check')} مكتملة</span>` : `<button class="btn soft sm" onclick="progSet('${i.id}',${q},${d},${mine},${q})">${ic('check-check')} اكتملت كلها</button>`}<span class="sub grow">راما ${x.done_rama || 0} · مريم ${x.done_maryam || 0}</span></div></div>`; };
+async function loadCats() { const { data, error } = await sb.from('product_categories').select('*').order('sort_order').order('created_at'); catOK = !error; catCache = data || []; }
+const catList = () => catCache.map(c => `<div class="row" style="padding:8px 0;border-top:1px dashed var(--mv-l)"><b class="grow">${esc(c.name)}</b><button class="btn soft sm" onclick="catRename('${c.id}')" aria-label="تعديل">${ic('pencil')}</button><button class="btn del sm" onclick="catDel('${c.id}')" aria-label="حذف">${ic('trash-2')}</button></div>`).join('') || '<div class="sub" style="margin:10px 0">لا توجد أقسام بعد.</div>';
 const CATI = { yarn:'disc-3', bands:'link', packaging:'package', tools:'scissors', other:'box' };
 let invF = { q: '', low: false };
 function toast(t, ok) {
@@ -150,20 +210,28 @@ function openM(html) {
   d.addEventListener('mousedown', e => { if (e.target === d) closeM(); }); document.body.appendChild(d); icons(); d.querySelector('input,select,textarea')?.focus();
 }
 function fld(f) {
-  const id = 'mf_' + f.id, v = f.value ?? '', lab = `<label for="${id}">${f.label}${f.req ? '<b class="rq"> *</b>' : ''}</label>`;
-  const inp = f.type === 'select' ? `<select id="${id}">${f.options.map(([o, l]) => `<option value="${esc(o)}" ${String(o) === String(v) ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`
-    : f.type === 'textarea' ? `<textarea id="${id}" rows="3" placeholder="${esc(f.ph || '')}">${esc(v)}</textarea>`
-    : `<input id="${id}" type="${f.type === 'number' ? 'text' : f.type || 'text'}" ${f.type === 'number' ? 'inputmode="decimal"' : ''} value="${esc(v)}" placeholder="${esc(f.ph || '')}" ${f.list ? `list="dl_${f.id}"` : ''}>${f.list ? `<datalist id="dl_${f.id}">${f.list.map(x => `<option value="${esc(x)}">`).join('')}</datalist>` : ''}`;
-  return `<div class="fg">${lab}${inp}${f.hint ? `<div class="hint">${f.hint}</div>` : ''}</div>`;
+  if (f.type === 'sec') return `<div class="fsec">${f.label}</div>`;
+  const id = 'mf_' + f.id, v = f.value ?? '', lab = `<label for="${id}">${f.label}${f.req ? '<b class="rq"> *</b>' : ''}</label>`, hint = f.hint ? `<div class="hint">${f.hint}</div>` : '';
+  let inp;
+  if (f.type === 'chips' || f.type === 'seg') inp = `<input type="hidden" id="${id}" value="${esc(v)}"><div class="chips ${f.type}">${f.options.map(([o, l, i]) => `<button type="button" class="${String(o) === String(v) ? 'on' : ''}" onclick="pickChip('${id}',this,'${esc(o)}')">${i ? ic(i) : ''}${esc(l)}</button>`).join('')}</div>`;
+  else if (f.type === 'swatch') inp = `<input type="hidden" id="${id}" value="${esc(v)}"><div class="sws">${COLORS.map(([n, h]) => `<button type="button" class="sw2 ${v === h ? 'on' : ''}" title="${n}" style="background:${h}" onclick="pickChip('${id}',this,'${h}')"></button>`).join('')}<label class="sw2 cust" title="لون مخصص">${ic('palette')}<input type="color" value="${v || '#cccccc'}" oninput="pickChip('${id}',this.parentNode,this.value)"></label><button type="button" class="chipx" onclick="pickChip('${id}',null,'')">بدون لون</button></div>`;
+  else if (f.type === 'stepper') inp = `<div class="stp2"><button type="button" onclick="stepIn('${id}',-1)">${ic('minus')}</button><input id="${id}" inputmode="decimal" value="${esc(v)}" placeholder="0"><button type="button" onclick="stepIn('${id}',1)">${ic('plus')}</button></div>`;
+  else if (f.type === 'select') inp = `<select id="${id}">${f.options.map(([o, l]) => `<option value="${esc(o)}" ${String(o) === String(v) ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
+  else if (f.type === 'textarea') inp = `<textarea id="${id}" rows="3" placeholder="${esc(f.ph || '')}">${esc(v)}</textarea>`;
+  else inp = `<input id="${id}" type="${f.type === 'number' ? 'text' : f.type || 'text'}" ${f.type === 'number' ? 'inputmode="decimal"' : ''} value="${esc(v)}" placeholder="${esc(f.ph || '')}">`;
+  return `<div class="fg">${lab}${inp}${hint}</div>`;
 }
+function pickChip(id, el, val) { const h = $('#' + id); h.value = val; const w = el ? el.closest('.chips,.sws') : h.nextElementSibling; w.querySelectorAll('button,label.sw2').forEach(b => b.classList.remove('on')); if (el) el.classList.add('on'); }
+function stepIn(id, d) { const i = $('#' + id); i.value = Math.max(0, (Number(i.value) || 0) + d); }
+
 function form(o) {
   openM(`<div class="mh"><h3>${o.title}</h3><button class="ibtn" onclick="closeM()" aria-label="إغلاق">${ic('x')}</button></div>${o.sub ? `<div class="sub" style="margin-bottom:6px">${o.sub}</div>` : ''}
   ${o.fields.map(fld).join('')}<div class="err" id="mf_err"></div><div class="row" style="margin-top:12px"><button class="btn grow" id="mf_ok">${o.ok || 'حفظ'}</button><button class="btn soft" onclick="closeM()">إلغاء</button></div>`);
   const ok = $('#mf_ok'), run = async () => {
     const v = {}, er = $('#mf_err');
-    for (const f of o.fields) { const el = $('#mf_' + f.id); v[f.id] = el.value.trim();
+    for (const f of o.fields) { if (f.type === 'sec') continue; const el = $('#mf_' + f.id); v[f.id] = el.value.trim();
       if (f.req && !v[f.id]) { er.textContent = 'املئي الحقل: ' + f.label; el.focus(); return; }
-      if (f.type === 'number' && v[f.id] !== '' && isNaN(Number(v[f.id]))) { er.textContent = 'اكتبي رقمًا صحيحًا في: ' + f.label; el.focus(); return; } }
+      if ((f.type === 'number' || f.type === 'stepper') && v[f.id] !== '' && isNaN(Number(v[f.id]))) { er.textContent = 'اكتبي رقمًا صحيحًا في: ' + f.label; el.focus(); return; } }
     ok.disabled = true; ok.textContent = 'جارٍ الحفظ...'; er.textContent = '';
     let r; try { r = await o.onSubmit(v); } catch (e) { r = e.message; }
     if (typeof r === 'string') { ok.disabled = false; ok.textContent = o.ok || 'حفظ'; er.textContent = /permission denied/i.test(r) ? 'لا توجد صلاحية على قاعدة البيانات، شغّلي ملف 02_fix_permissions.sql (' + r + ')' : r; return; }
@@ -198,6 +266,7 @@ async function boot() {
   const { data } = await sb.from('staff').select('id,key,name');
   (data || []).forEach(s => staff[s.id] = s);
   me = staff[session.user.id];
+  sb.from('settings').select('value').eq('id', 'theme_admin').maybeSingle().then(r => { if (r.data?.value) { theme = { ...THEME0, ...r.data.value }; applyTheme(theme); } });
   if (!me) { await sb.auth.signOut(); return loginView('هذا الحساب غير مصرّح له بدخول المساحة.'); }
   app.innerHTML = `<aside class="side" id="side"></aside><div class="backdrop" id="bd" onclick="toggleSide(false)"></div>
   <div class="content"><header class="top"><button class="ibtn menu-btn" onclick="toggleSide(true)" aria-label="القائمة">${ic('menu')}</button><h1 id="ptitle"></h1><span class="grow"></span><button class="ibtn" id="bell" onclick="go('notifs')" aria-label="التنبيهات"></button><span class="chip">${ic('user')} ${esc(me.name)}</span><button class="ibtn" onclick="signOut()" aria-label="خروج">${ic('log-out')}</button></header><main class="wrap" id="main"></main></div><div class="tabbar" id="nav"></div>`;
@@ -211,25 +280,25 @@ async function countUnread() {
 function drawNav() {
   const cur = GRP[view] ?? view;
   $('#side').innerHTML = `<div class="sb-h">${logo()}<b class="brand">مساحة بيتالي</b></div>` + NAV.map(([t, items]) => `${t ? `<div class="gt">${t}</div>` : ''}${items.map(([k, i, l]) => `<button class="si ${cur === k ? 'on' : ''}" onclick="go('${k}')">${ic(i)}<span>${l}</span></button>`).join('')}`).join('');
-  const tabs = [['home', 'home', 'الرئيسية'], ['orders', 'clipboard-list', 'الطلبات'], ['products', 'shopping-bag', 'المنتجات'], ['inventory', 'boxes', 'المخزون']];
+  const tabs = [['home', 'home', 'الرئيسية'], ['orders', 'clipboard-list', 'الطلبات'], ['catalog', 'shopping-bag', 'المنتجات'], ['money', 'wallet', 'المالية']];
   $('#nav').innerHTML = tabs.map(([k, i, l]) => `<button class="${cur === k ? 'on' : ''}" onclick="go('${k}')">${ic(i)}<span>${l}</span></button>`).join('') + `<button onclick="toggleSide(true)">${ic('menu')}<span>القائمة</span></button>`;
   const b = $('#bell'); if (b) b.innerHTML = ic('bell') + (unread ? `<b class="badge">${unread}</b>` : '');
   const t = $('#ptitle'); if (t) t.textContent = TITLES[view] || '';
   icons();
 }
-async function go(v, a) { view = v; arg = a; toggleSide(false); drawNav(); await render(); scrollTo(0, 0); }
+async function go(v, a) { if (HUB_OF[v]) { HT[HUB_OF[v]] = v; v = HUB_OF[v]; } view = v; arg = a; toggleSide(false); drawNav(); await render(); scrollTo(0, 0); }
 async function render() {
   const m = $('#main'); if (!m) return;
   try { m.innerHTML = await V[view](arg); if (post) { const f = post; post = null; f(); } } catch (e) { m.innerHTML = `<div class="card">تعذّر تحميل الصفحة: ${esc(e.message)}</div>`; }
   if (view === 'home') m.insertAdjacentHTML('beforeend', `<img class="stamp" src="${CFG.logo}" alt="" onerror="this.remove()">`);
-  if (view === 'chat') { const b = $('#msgs'); if (b) b.scrollTop = b.scrollHeight; }
+  if (view === 'org' && HT.org === 'chat') { const b = $('#msgs'); if (b) b.scrollTop = b.scrollHeight; }
   icons();
 }
 function realtime() {
-  const soft = () => { clearTimeout(timer); timer = setTimeout(() => ['home','orders','order','inventory'].includes(view) && !document.activeElement?.matches('input,textarea,select') && render(), 500); };
+  const soft = () => { clearTimeout(timer); timer = setTimeout(() => ['home','orders','order','catalog'].includes(view) && !document.activeElement?.matches('input,textarea,select') && render(), 500); };
   const ch = sb.channel('petali');
   ['orders','order_item_progress','order_events','inventory_items'].forEach(t => ch.on('postgres_changes', { event:'*', schema:'public', table:t }, soft));
-  ch.on('postgres_changes', { event:'INSERT', schema:'public', table:'messages' }, () => view === 'chat' && render());
+  ch.on('postgres_changes', { event:'INSERT', schema:'public', table:'messages' }, () => view === 'org' && HT.org === 'chat' && render());
   ch.on('postgres_changes', { event:'INSERT', schema:'public', table:'notifications', filter:`recipient_id=eq.${me.id}` }, p => { unread++; drawNav(); toast(p.new.title); if (view === 'notifs') render(); });
   ch.subscribe();
 }
@@ -237,68 +306,55 @@ function realtime() {
 /* ---------- الصفحات ---------- */
 const V = {
   async home() {
-    const [o, p, low, bal, ev] = await Promise.all([
-      sb.from('orders').select('id,order_no,customer_name,status,executor,due_date').is('deleted_at', null).not('status', 'in', '(completed,cancelled)').order('due_date', { nullsFirst: false }),
-      sb.from('v_order_item_progress').select('order_id,quantity,done_total'),
-      sb.from('v_inventory_low').select('id,name,quantity,unit'),
-      sb.from('v_finance_balances').select('*'),
-      sb.from('order_events').select('text,actor_name,created_at,order_id').order('created_at', { ascending: false }).limit(6)]);
+    const [o, p, low, bal] = await Promise.all([
+      sb.from('orders').select('id,order_no,customer_name,status,executor,due_date,total,created_at').is('deleted_at', null).not('status', 'in', '(completed,cancelled)').order('created_at', { ascending: false }),
+      sb.from('v_order_item_progress').select('order_id,quantity,done_total'), sb.from('v_inventory_low').select('id,name'), sb.from('v_finance_balances').select('*')]);
     const prog = {}; (p.data || []).forEach(r => { const x = prog[r.order_id] ||= { q: 0, d: 0 }; x.q += r.quantity; x.d += r.done_total; });
-    const orders = o.data || [], soon = orders.filter(r => r.due_date && (new Date(r.due_date) - Date.now()) / 864e5 <= 2);
-    const b = Object.fromEntries((bal.data || []).map(r => [r.account, r.balance]));
-    return `<h2>أهلًا ${esc(me.name)}</h2><div class="stitch"></div>
-    <div class="grid">
-      <div class="card click" onclick="go('orders')"><h3>${ic('clipboard-list')} الطلبات الحالية</h3><div style="font-size:2rem;font-weight:700;color:var(--mv)">${orders.length}</div><div class="sub">${soon.length ? `${soon.length} تحتاج عملًا قريبًا` : 'لا شيء مستعجل'}</div></div>
-      <div class="card click" onclick="go('inventory')"><h3>${ic('boxes')} المواد الناقصة</h3><div style="font-size:2rem;font-weight:700" class="${(low.data || []).length ? 'low' : ''}">${(low.data || []).length}</div><div class="sub">${(low.data || []).slice(0, 3).map(i => esc(i.name)).join('، ') || 'كل المواد كافية'}</div></div>
-      <div class="card dash"><h3>${ic('wallet')} صندوق ومدخرات بيتالي</h3><div style="font-size:1.6rem;font-weight:700;color:var(--mv)">${money(b.savings)}</div><div class="sub">أرباح راما ${money(b.rama)} · أرباح مريم ${money(b.maryam)}</div></div>
-    </div>
-    <h2 style="margin-top:8px">الطلبات الجارية</h2>
-    ${orders.map(r => { const x = prog[r.id] || { q: 0, d: 0 }; return `<div class="card click" onclick="go('order','${r.id}')"><div class="row"><b class="grow">${esc(r.customer_name)}</b><span class="tag s-${r.status}">${ST[r.status]}</span></div>
-      <div class="sub" style="margin:4px 0 8px">${r.executor ? 'تنفذها: ' + EX[r.executor] : 'لم تُحدَّد المنفذة'}${r.due_date ? ' · الموعد ' + r.due_date : ''}</div><div class="bar"><i style="width:${pct(x.d, x.q)}%"></i></div></div>`; }).join('') || '<div class="card sub empty">لا توجد طلبات جارية.</div>'}
-    <h2>آخر النشاطات</h2>
-    <div class="card"><div class="tl">${(ev.data || []).map(e => `<div class="click" onclick="go('order','${e.order_id}')">${esc(e.text)}<div class="sub">${esc(e.actor_name || '')} · ${ago(e.created_at)}</div></div>`).join('') || '<span class="sub">لا نشاط بعد.</span>'}</div></div>`;
+    const O = o.data || [], B = Object.fromEntries((bal.data || []).map(r => [r.account, r.balance])), L = low.data || [];
+    const row = r => { const x = prog[r.id] || { q: 0, d: 0 }, nx = NEXT[r.status];
+      return `<div class="hrow"><div class="grow click" onclick="go('order','${r.id}')"><b dir="ltr" class="onum">${esc(r.order_no)}</b> <b>${esc(r.customer_name)}</b><div class="sub">${fmtD(r.created_at)} · ${money(r.total)}${r.executor ? ' · ' + EX[r.executor] : ''}${r.due_date ? ' · الموعد ' + r.due_date : ''}</div>${r.status === 'in_progress' ? `<div class="bar" style="margin-top:6px"><i style="width:${pct(x.d, x.q)}%"></i></div>` : ''}</div>${nx ? `<button class="btn sm" onclick="advance('${r.id}')">${nx[1]}</button>` : ''}</div>`; };
+    const sec = (t, i, a, e) => `<div class="card"><h3>${ic(i)} ${t} <span class="cnt">${a.length}</span></h3>${a.map(row).join('') || `<div class="sub">${e}</div>`}</div>`;
+    const nw = O.filter(r => ['new', 'awaiting_confirmation'].includes(r.status)), run = O.filter(r => ['final_confirmed', 'in_progress'].includes(r.status)), rdy = O.filter(r => r.status === 'ready');
+    return `<div class="ph"><h2>أهلًا ${esc(me.name)}</h2><button class="btn" onclick="newOrder()">${ic('plus')} طلب جديد</button></div>
+    ${sec('طلبات جديدة تنتظر قرارك', 'inbox', nw, 'لا توجد طلبات جديدة.')}${sec('قيد العمل', 'play', run, 'لا يوجد شيء قيد التنفيذ.')}${sec('جاهزة للتسليم', 'package', rdy, 'لا توجد طلبات جاهزة.')}
+    <div class="grid"><div class="card click" onclick="go('inventory')"><h3>${ic('boxes')} المواد الناقصة</h3><b class="${L.length ? 'low' : ''}" style="font-size:1.6rem">${L.length}</b><div class="sub">${L.slice(0, 3).map(i => esc(i.name)).join('، ') || 'كل المواد كافية'}</div></div>
+    <div class="card click" onclick="go('finance')"><h3>${ic('wallet')} صندوق بيتالي</h3><b style="font-size:1.6rem;color:var(--mv)">${money(B.savings)}</b><div class="sub">راما ${money(B.rama)} · مريم ${money(B.maryam)}</div></div></div>`;
   },
 
   async orders() {
-    const { data } = await sb.from('orders').select('id,order_no,customer_name,status,executor,total,due_date,created_at,pickup_location_name').is('deleted_at', null).order('created_at', { ascending: false });
-    const q = filt.q.trim().toLowerCase();
-    const rows = (data || []).filter(r => (!q || (r.order_no + r.customer_name).toLowerCase().includes(q)) && (!filt.st || r.status === filt.st) && (!filt.ex || r.executor === filt.ex));
-    return `<div class="row"><h2 class="grow">الطلبات</h2><button class="btn sm" onclick="newOrder()">${ic('plus')} طلب جديد</button></div>
-    <input placeholder="ابحثي برقم الطلب أو اسم العميل" value="${esc(filt.q)}" oninput="filt.q=this.value;clearTimeout(timer);timer=setTimeout(()=>{render().then(()=>{const i=document.querySelector('#main input');i.focus();i.setSelectionRange(99,99)})},350)">
-    <div class="row" style="margin:10px 0"><select onchange="filt.st=this.value;render()" class="grow"><option value="">كل الحالات</option>${Object.entries(ST).map(([k, v]) => `<option value="${k}" ${filt.st === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
-    <select onchange="filt.ex=this.value;render()" class="grow"><option value="">كل المنفذات</option>${Object.entries(EX).map(([k, v]) => `<option value="${k}" ${filt.ex === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
-    ${rows.map(r => `<div class="card click" onclick="go('order','${r.id}')"><div class="row"><b>${esc(r.order_no)}</b><span class="grow">${esc(r.customer_name)}</span><span class="tag s-${r.status}">${ST[r.status]}</span></div>
-    <div class="sub">${money(r.total)} · ${esc(r.pickup_location_name || '')} · ${ago(r.created_at)}</div></div>`).join('') || '<div class="card sub empty">لا توجد طلبات مطابقة.</div>'}`;
+    const { data } = await sb.from('orders').select('id,order_no,customer_name,status,executor,total,due_date,created_at,pickup_location_name,source,is_wholesale,deleted_at,order_items(quantity)').order('created_at', { ascending: false });
+    const all = data || [], q = filt.q.trim().toLowerCase(), cnt = t => all.filter(r => inTab(r, t)).length;
+    const rows = all.filter(r => inTab(r, oTab) && (!q || (r.order_no + r.customer_name).toLowerCase().includes(q)));
+    return `<div class="ph"><h2>الطلبات</h2><div class="row"><button class="btn soft sm" onclick="oSelMode=!oSelMode;oSel.clear();render()">${ic('check-square')} ${oSelMode ? 'إنهاء التحديد' : 'تحديد'}</button><button class="btn sm" onclick="newOrder()">${ic('plus')} طلب جديد</button></div></div>
+    <div class="tabs">${OTABS.map(([k, l]) => `<button class="${oTab === k ? 'on' : ''}" onclick="oTab='${k}';oSel.clear();render()">${l}${k !== 'all' && cnt(k) ? ` <span class="cnt">${cnt(k)}</span>` : ''}</button>`).join('')}</div>
+    <div class="srch" style="margin-bottom:10px">${ic('search')}<input placeholder="ابحثي برقم الطلب أو اسم العميل" value="${esc(filt.q)}" oninput="filt.q=this.value;clearTimeout(timer);timer=setTimeout(()=>{render().then(()=>{const i=document.querySelector('.srch input');i.focus();i.setSelectionRange(99,99)})},350)"></div>
+    ${oSelMode && oSel.size ? `<div class="selbar"><b>${oSel.size} محدد</b>${oTab === 'trash' ? `<button class="btn del sm" onclick="oPurge([...oSel])">${ic('trash-2')} حذف نهائي</button>` : `<button class="btn del sm" onclick="oTrash([...oSel])">${ic('trash-2')} نقل للمحذوفات</button>`}</div>` : ''}
+    ${oTab === 'trash' ? '<div class="sub" style="margin-bottom:8px">الطلبات هنا محذوفة مؤقتًا، يمكنك استرجاعها أو حذفها نهائيًا.</div>' : ''}
+    ${rows.map(oCard).join('') || '<div class="card sub empty">لا توجد طلبات هنا.</div>'}`;
   },
 
   async order(id) {
-    const [o, it, pg, ev, nd] = await Promise.all([
-      sb.from('orders').select('*').eq('id', id).single(),
-      sb.from('order_items').select('*').eq('order_id', id).order('created_at'),
-      sb.from('v_order_item_progress').select('*').eq('order_id', id),
-      sb.from('order_events').select('*').eq('order_id', id).order('created_at', { ascending: false }),
-      sb.rpc('order_material_needs', { p_order: id })]);
-    const r = o.data, P = Object.fromEntries((pg.data || []).map(x => [x.order_item_id, x]));
+    const [o, it, pg, ev, nd, pr] = await Promise.all([sb.from('orders').select('*').eq('id', id).single(), sb.from('order_items').select('*').eq('order_id', id).order('created_at'), sb.from('v_order_item_progress').select('*').eq('order_id', id),
+      sb.from('order_events').select('*').eq('order_id', id).order('created_at', { ascending: false }), sb.rpc('order_material_needs', { p_order: id }), sb.from('products').select('id,options')]);
+    const r = o.data, P = Object.fromEntries((pg.data || []).map(x => [x.order_item_id, x])), nx = NEXT[r.status], PM = Object.fromEntries((pr.data || []).map(p => [p.id, p.options || []]));
     const short = (nd.data || []).filter(n => Number(n.shortage) > 0 && !r.materials_deducted_at);
     const tq = (it.data || []).reduce((s, i) => s + i.quantity, 0), td = (pg.data || []).reduce((s, i) => s + i.done_total, 0);
     return `<button class="btn soft sm" onclick="go('orders')">${ic('arrow-right')} الطلبات</button>
-    <div class="card" style="margin-top:10px"><div class="row"><h2 class="grow" style="margin:0">${esc(r.customer_name)}</h2><span class="tag s-${r.status}">${ST[r.status]}</span></div>
-    <div class="sub" dir="ltr" style="text-align:right">${esc(r.customer_phone)}</div>
-    <div class="sub">الاستلام: ${esc(r.pickup_location_name || '—')} · الإجمالي ${money(r.total)}${r.deposit_required ? ' · <b class="low">يُنصح بعربون</b>' : ''}</div>
-    ${r.customer_notes ? `<div style="margin-top:8px">ملاحظة العميل: ${esc(r.customer_notes)}</div>` : ''}</div>
+    <div class="card" style="margin-top:10px"><div class="row"><b dir="ltr" class="onum">${esc(r.order_no)}</b><span class="tag s-${r.status}">${ST[r.status]}</span><span class="grow"></span><span class="sub">${fmtD(r.created_at)} · ${new Date(r.created_at).toLocaleTimeString('ar-u-nu-latn', { hour: '2-digit', minute: '2-digit' })}</span></div>
+      <h2 style="margin:8px 0 2px">${esc(r.customer_name)}</h2><div class="sub" dir="ltr" style="text-align:right">${esc(r.customer_phone)}</div>
+      <div class="row" style="margin-top:8px"><span class="tag">${r.source === 'site' ? 'من موقع العملاء' : 'طلب يدوي'}</span>${r.is_wholesale ? '<span class="tag s-in_progress">جملة</span>' : ''}<span class="tag">${esc(r.pickup_location_name || 'بدون مكان استلام')}</span>${r.deposit_required ? '<span class="tag" style="background:#F6D9D3">يُنصح بعربون</span>' : ''}</div>
+      <div class="row" style="margin-top:10px"><span class="sub grow">الإجمالي</span><b style="font-size:1.3rem">${money(r.total)}</b></div>${r.customer_notes ? `<div style="margin-top:8px">ملاحظة العميل: ${esc(r.customer_notes)}</div>` : ''}</div>
     ${short.length ? `<div class="card dash low">مواد غير كافية لهذا الطلب: ${short.map(n => `${esc(n.item_name)} (ينقص ${Number(n.shortage)} ${esc(n.unit)})`).join('، ')}</div>` : ''}
-    <div class="card"><h3>الحالة والتنفيذ</h3>
-      <select onchange="setStatus('${r.id}',this.value)">${Object.entries(ST).map(([k, v]) => `<option value="${k}" ${r.status === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
-      <div class="row" style="margin:10px 0">${Object.entries(EX).map(([k, v]) => `<button class="btn soft sm ${r.executor === k ? 'on' : ''}" onclick="upd('${r.id}',{executor:'${k}'})">${v}</button>`).join('')}</div>
-      <label class="sub">الموعد المستهدف</label><input type="date" value="${r.due_date || ''}" onchange="upd('${r.id}',{due_date:this.value||null})"></div>
-    <div class="card"><h3>المنتجات</h3><div class="bar" style="margin-bottom:10px"><i style="width:${pct(td, tq)}%"></i></div>
-    ${(it.data || []).map(i => { const x = P[i.id] || { done_rama: 0, done_maryam: 0, done_total: 0, remaining: i.quantity };
-      return `<div style="padding:10px 0;border-top:1px dashed var(--mv-l)"><div class="row"><b class="grow">${esc(i.product_name)}${i.is_gift ? ' ' + ic('gift') : ''}</b><button class="btn sm" onclick="addProg('${i.id}')">${ic('plus')} سجّلي إنجاز</button></div>
-      <div class="sub">${Object.entries(i.options || {}).map(([k, v]) => esc(k) + ': ' + esc(v)).join(' · ')}</div>
-      <div class="sub">المطلوب ${i.quantity} · راما ${x.done_rama} · مريم ${x.done_maryam} · المنجز ${x.done_total} · المتبقي ${x.remaining}</div></div>`; }).join('')}</div>
-    <div class="card"><div class="row"><h3 class="grow">السجل الزمني</h3><button class="btn soft sm" onclick="addNote('${r.id}')">${ic('plus')} ملاحظة</button></div>
-    <div class="tl">${(ev.data || []).map(e => `<div>${esc(e.text)}<div class="sub">${esc(e.actor_name || '')} · ${new Date(e.created_at).toLocaleString('ar-SA')}</div></div>`).join('')}</div></div>
-    <button class="btn del" onclick="delOrder('${r.id}')">حذف الطلب</button>`;
+    ${nx ? `<div class="card actcard"><div class="sub" style="margin-bottom:8px">الخطوة التالية</div><button class="btn" style="width:100%" onclick="advance('${r.id}')">${ic(nx[2])} ${nx[1]}</button></div>` : ''}
+    <div class="card"><h3>${ic('users')} المنفذة والموعد</h3><div class="row" style="margin-bottom:10px">${Object.entries(EX).map(([k, v]) => `<button class="btn soft sm ${r.executor === k ? 'on' : ''}" onclick="upd('${r.id}',{executor:'${k}'})">${v}</button>`).join('')}</div>
+      <label class="lb">الموعد المستهدف</label><input type="date" value="${r.due_date || ''}" onchange="upd('${r.id}',{due_date:this.value||null})"></div>
+    <div class="card"><div class="row"><h3 class="grow">${ic('shopping-bag')} المطلوب تنفيذه</h3><b style="font-size:1.2rem">${td} / ${tq}</b></div><div class="bar thick" style="margin:8px 0 6px"><i style="width:${pct(td, tq)}%"></i></div>
+    <div class="sub" style="margin-bottom:6px">${td >= tq && tq ? 'اكتملت كل القطع، اضغطي "جاهز للاستلام" في الأعلى.' : 'اضغطي + عند إنجاز كل قطعة، أو اكتبي العدد الصحيح في الخانة للتصحيح. العميل يرى التقدم في صفحة التتبع.'}</div>
+    ${(it.data || []).map(i => itemCard(i, P[i.id] || { done_rama: 0, done_maryam: 0, done_total: 0 }, PM[i.product_id])).join('')}</div>
+    <div class="card"><div class="row"><h3 class="grow">${ic('clock')} السجل الزمني</h3><button class="btn soft sm" onclick="addNote('${r.id}')">${ic('plus')} ملاحظة</button></div>
+    <div class="tl">${(ev.data || []).map(e => `<div>${esc(e.text)}<div class="sub">${esc(e.actor_name || '')} · ${fmtD(e.created_at)} ${new Date(e.created_at).toLocaleTimeString('ar-u-nu-latn', { hour: '2-digit', minute: '2-digit' })}</div></div>`).join('')}</div></div>
+    <details class="card"><summary>خيارات أخرى</summary><label class="lb">تغيير الحالة يدويًا</label><select onchange="setStatus('${r.id}',this.value)">${Object.entries(STU).map(([k, v]) => `<option value="${k}" ${(r.status === k || (k === 'new' && r.status === 'awaiting_confirmation')) ? 'selected' : ''}>${v}</option>`).join('')}</select>
+    <button class="btn del" style="margin-top:12px" onclick="delOrder('${r.id}')">${ic('trash-2')} نقل الطلب إلى المحذوفات</button></details>`;
   },
 
   async inventory() {
@@ -310,42 +366,54 @@ const V = {
     <div class="row" style="margin-bottom:12px"><div class="srch grow">${ic('search')}<input placeholder="ابحثي عن مادة" value="${esc(invF.q)}" oninput="invF.q=this.value;clearTimeout(timer);timer=setTimeout(()=>render().then(()=>{const i=document.querySelector('.srch input');i.focus();i.setSelectionRange(99,99)}),300)"></div>
     <button class="btn soft ${invF.low ? 'on' : ''}" onclick="invF.low=!invF.low;render()">${ic('alert-triangle')} الناقصة فقط</button></div>
     ${rows.map(i => { const low = isLow(i), w = Number(i.min_quantity) > 0 ? Math.min(100, Math.round(100 * Number(i.quantity) / (Number(i.min_quantity) * 3))) : 100;
-      return `<div class="card"><div class="row"><span class="ibox">${ic(CATI[i.category] || 'box')}</span><div class="grow"><b>${esc(i.name)}</b><div class="sub">${CAT[i.category] || ''} · التكلفة ${Number(i.unit_cost).toFixed(2)} ر.س للوحدة${i.purchased_at ? ' · آخر شراء ' + i.purchased_at : ''}</div></div><div class="qn ${low ? 'low' : ''}">${Number(i.quantity)} <span class="sub">${esc(i.unit)}</span></div></div>
+      return `<div class="card"><div class="row"><span class="ibox">${ic(CATI[i.category] || 'box')}</span><div class="grow"><b>${i.color ? `<i class="sw" style="background:${esc(i.color)}"></i> ` : ''}${esc(i.name)}</b><div class="sub">${CAT[i.category] || ''} · التكلفة ${Number(i.unit_cost).toFixed(2)} ر.س للوحدة${i.purchased_at ? ' · آخر شراء ' + i.purchased_at : ''}</div></div><div class="qn ${low ? 'low' : ''}">${Number(i.quantity)} <span class="sub">${esc(i.unit)}</span></div></div>
       <div class="bar" style="margin:10px 0 4px"><i style="width:${w}%;${low ? 'background:var(--warn)' : ''}"></i></div><div class="sub">حد التنبيه ${Number(i.min_quantity)} ${esc(i.unit)}</div>
       <div class="row" style="margin-top:10px"><button class="btn sm" onclick="buyItem('${i.id}')">${ic('shopping-cart')} تسجيل شراء</button><button class="btn soft sm" onclick="adjust('${i.id}')">${ic('sliders-horizontal')} تعديل الكمية</button><button class="btn soft sm" onclick="editItem('${i.id}')">${ic('pencil')} تعديل</button><button class="btn del sm" onclick="delItem('${i.id}')" aria-label="حذف">${ic('trash-2')}</button></div></div>`; }).join('') || '<div class="card sub empty">لا توجد مواد مطابقة.</div>'}`;
   },
 
   async products() {
+    await loadCats();
     const { data } = await sb.from('products').select('*').is('deleted_at', null).order('sort_order').order('created_at');
-    return `<div class="row"><h2 class="grow">المنتجات</h2><button class="btn sm" onclick="editProduct('new')">${ic('plus')} منتج جديد</button></div>
-    ${(data || []).map(p => `<div class="card"><div class="row">${p.image_path ? `<img src="${imgUrl(p.image_path)}" alt="" style="width:56px;height:56px;border-radius:12px;object-fit:cover">` : ''}
-      <div class="grow click" onclick="editProduct('${p.id}')"><b>${esc(p.name)}</b><div class="sub">${money(p.price)}${p.wholesale_price ? ' · جملة ' + money(p.wholesale_price) : ''}</div></div>
+    const all = data || [], cn = Object.fromEntries(catCache.map(c => [c.id, c.name])), rows = all.filter(p => pcat === 'all' || (pcat === 'none' ? !p.category_id : p.category_id === pcat));
+    const chips = [['all', 'الكل']].concat(catCache.map(c => [c.id, c.name])).concat(catCache.length && all.some(p => !p.category_id) ? [['none', 'بدون قسم']] : []);
+    return `<div class="ph"><h2>المنتجات</h2><div class="row"><button class="btn soft sm" onclick="catManager()">${ic('layers')} الأقسام</button><button class="btn sm" onclick="editProduct('new')">${ic('plus')} منتج جديد</button></div></div>
+    ${chips.length > 1 ? `<div class="tabs">${chips.map(([k, l]) => `<button class="${pcat === k ? 'on' : ''}" onclick="pcat='${k}';render()">${esc(l)}</button>`).join('')}</div>` : ''}
+    ${rows.map(p => `<div class="card"><div class="row">${p.image_path ? `<img src="${imgUrl(p.image_path)}" alt="" style="width:56px;height:56px;border-radius:12px;object-fit:cover">` : ''}
+      <div class="grow click" onclick="editProduct('${p.id}')"><b>${esc(p.name)}</b><div class="sub">${money(p.price)}${p.wholesale_price ? ' · جملة ' + money(p.wholesale_price) : ''}${p.category_id && cn[p.category_id] ? ' · ' + esc(cn[p.category_id]) : ''}</div></div>
       ${p.is_paused ? '<span class="tag">متوقف مؤقتًا</span>' : !p.is_available ? '<span class="tag">غير متاح</span>' : '<span class="tag s-ready">ظاهر للعملاء</span>'}</div>
-      <div class="row" style="margin-top:8px"><button class="btn soft sm" onclick="togglePause('${p.id}',${!p.is_paused})">${p.is_paused ? 'استئناف' : 'إيقاف مؤقت'}</button></div></div>`).join('') || '<div class="card sub empty">لا توجد منتجات بعد.</div>'}`;
+      <div class="row" style="margin-top:8px"><button class="btn soft sm" onclick="togglePause('${p.id}',${!p.is_paused})">${p.is_paused ? 'استئناف' : 'إيقاف مؤقت'}</button></div></div>`).join('') || '<div class="card sub empty">لا توجد منتجات في هذا القسم.</div>'}`;
   },
 
   async product() {
-    const f = pf, opts = m => invItems.map(i => `<option value="${i.id}" ${i.id === m.item_id ? 'selected' : ''}>${esc(i.name)} (${esc(i.unit)})</option>`).join('');
-    return `<button class="btn soft sm" onclick="go('products')">${ic('arrow-right')} المنتجات</button><h2 style="margin-top:10px">${f.id ? 'تعديل المنتج' : 'منتج جديد'}</h2>
-    <div class="card"><h3>${ic('shopping-bag')} المعلومات الأساسية</h3><label class="sub">الاسم <b class="rq">*</b></label><input value="${esc(f.name)}" oninput="pf.name=this.value">
-      <label class="sub">الوصف</label><textarea rows="3" oninput="pf.description=this.value">${esc(f.description)}</textarea>
-      <label class="sub">الصورة (اختيارية)</label>${f.image_path ? `<img src="${imgUrl(f.image_path)}" alt="" style="width:90px;height:90px;border-radius:14px;object-fit:cover;display:block;margin:6px 0">` : ''}<input type="file" accept="image/*" onchange="upImg(this.files[0])">
-      <label class="sub">الألوان والخيارات (سطر لكل خيار، مثال: اللون: موفي، وردي، كريمي)</label><textarea rows="3" oninput="pf.optionsText=this.value">${esc(f.optionsText)}</textarea>
-      <label class="sub">وقت التنفيذ التقريبي للقطعة (ساعات)</label><input type="number" step="any" value="${esc(f.est_hours)}" oninput="pf.est_hours=this.value">
-      <div class="row" style="margin-top:10px"><label><input type="checkbox" style="width:auto" ${f.is_available ? 'checked' : ''} onchange="pf.is_available=this.checked"> متاح للطلب</label><label><input type="checkbox" style="width:auto" ${f.is_paused ? 'checked' : ''} onchange="pf.is_paused=this.checked"> إيقاف مؤقت</label></div></div>
-    <div class="card"><h3>${ic('boxes')} المواد اللازمة لقطعة واحدة</h3><div class="sub" style="margin-bottom:10px">تُخصم تلقائيًا من المخزون عند تأكيد الطلب، وتُستخدم في اقتراح السعر.</div>
-      ${f.mats.map((m, i) => `<div class="row" style="margin-bottom:8px"><select class="grow" onchange="pf.mats[${i}].item_id=this.value">${opts(m)}</select><input type="number" step="any" style="width:90px" value="${esc(m.qty)}" oninput="pf.mats[${i}].qty=this.value"><button class="btn del sm" onclick="pf.mats.splice(${i},1);render()">${ic('x')}</button></div>`).join('')}
-      <button class="btn soft sm" onclick="addMat()">${ic('plus')} إضافة مادة</button></div>
-    <div class="card dash"><h3>${ic('banknote')} التسعير</h3><div class="grid">
-      <div><label class="sub">تكاليف إضافية للقطعة</label><input type="number" step="any" value="${esc(f.extra_costs)}" oninput="pf.extra_costs=this.value"></div>
-      <div><label class="sub">سعر القطعة (ر.س)</label><input type="number" step="any" value="${esc(f.price)}" oninput="pf.price=this.value"></div>
-      <div><label class="sub">سعر الجملة (اختياري)</label><input type="number" step="any" value="${esc(f.wholesale_price)}" oninput="pf.wholesale_price=this.value"></div>
-      <div><label class="sub">الجملة تبدأ من كمية</label><input type="number" value="${esc(f.wholesale_min_qty)}" oninput="pf.wholesale_min_qty=this.value"></div></div>
-      <button class="btn soft" style="margin-top:10px" onclick="suggest()">اقترحي لي سعرًا</button>
-      ${sug ? `<div class="sub" style="margin-top:10px">المواد ${money(sug.materials_cost)} + الأجر ${money(sug.labor_cost)} + إضافي ${money(sug.extra_costs)} = التكلفة ${money(sug.total_cost)}</div>
-      <div class="row" style="margin-top:8px"><button class="btn sm" onclick="pf.price=${sug.suggested_single};render()">اعتمدي ${money(sug.suggested_single)} للمفرد</button><button class="btn sm" onclick="pf.wholesale_price=${sug.suggested_wholesale};render()">اعتمدي ${money(sug.suggested_wholesale)} للجملة</button></div>` : ''}</div>
-    <div class="card"><label class="sub">ملاحظات داخلية (لا تظهر للعملاء)</label><textarea rows="2" oninput="pf.internal_notes=this.value">${esc(f.internal_notes)}</textarea></div>
-    <div class="row"><button class="btn grow" onclick="saveProduct()">حفظ المنتج</button>${f.id ? `<button class="btn del" onclick="delProduct()">حذف</button>` : ''}</div>`;
+    const f = pf, uni = id => (invItems.find(x => x.id === id) || {}).unit || '', steps = ['الأساسيات', 'الألوان والخيارات', 'المواد', 'التسعير'];
+    const t0 = `<div class="card"><label class="lb">اسم المنتج <b class="rq">*</b></label><input value="${esc(f.name)}" oninput="pf.name=this.value" placeholder="مثال: ربطة مقفلة">
+      <label class="lb">وصف قصير للعميل</label><textarea rows="3" oninput="pf.description=this.value" placeholder="مثال: ربطة كروشيه ناعمة بحجم وسط">${esc(f.description)}</textarea>
+      ${'category_id' in f ? `<label class="lb">القسم</label><div class="row"><select class="grow" onchange="pf.category_id=this.value"><option value="">بدون قسم</option>${catCache.map(c => `<option value="${c.id}" ${c.id === f.category_id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select><button class="btn soft sm" onclick="catManager()">${ic('layers')} إدارة الأقسام</button></div>` : ''}
+      <label class="lb">صورة المنتج</label><div class="row">${f.image_path ? `<img class="th" style="width:80px;height:80px" src="${imgUrl(f.image_path)}" alt="">` : `<span class="th" style="width:80px;height:80px">${ic('image')}</span>`}<label class="btn soft">${ic('upload')} اختيار صورة<input type="file" accept="image/*" hidden onchange="upImg(this.files[0])"></label></div>
+      <label class="lb">وقت تنفيذ القطعة الواحدة (بالساعات)</label><input type="text" inputmode="decimal" value="${esc(f.est_hours)}" oninput="pf.est_hours=this.value" placeholder="مثال: 1.5"><div class="hint">يدخل في حساب التكلفة واقتراح السعر.</div>
+      <div class="row" style="margin-top:12px"><label class="chk"><input type="checkbox" ${f.is_available ? 'checked' : ''} onchange="pf.is_available=this.checked"> متاح للطلب</label><label class="chk"><input type="checkbox" ${f.is_paused ? 'checked' : ''} onchange="pf.is_paused=this.checked"> إيقاف مؤقت</label></div>
+      <label class="lb">ملاحظات داخلية (لا تظهر للعملاء)</label><textarea rows="2" oninput="pf.internal_notes=this.value">${esc(f.internal_notes)}</textarea></div>`;
+    const t1 = `<datalist id="dl_gn"><option value="اللون"><option value="الحجم"><option value="الشكل"><option value="الخامة"></datalist><div class="sub" style="margin-bottom:8px">الخيارات هي ما يختاره العميل عند الطلب، مثل اللون أو الحجم. أنشئي خيارًا واحدًا لكل نوع.</div>
+      ${f.groups.map((g, i) => `<div class="card"><div class="row"><input class="grow" placeholder="اسم الخيار: اللون، الحجم..." list="dl_gn" value="${esc(g.name)}" oninput="pf.groups[${i}].name=this.value">
+        <div class="chips seg"><button class="${g.kind === 'color' ? 'on' : ''}" onclick="gKind(${i},'color')">${ic('palette')} ألوان</button><button class="${g.kind !== 'color' ? 'on' : ''}" onclick="gKind(${i},'text')">${ic('type')} نص</button></div><button class="ibtn" onclick="gDel(${i})" aria-label="حذف الخيار">${ic('trash-2')}</button></div>
+        <div class="chipsrow" style="margin-top:10px">${g.values.map((v, j) => `<span class="chipv ${v.available === false ? 'off' : ''}">${v.hex ? `<i class="sw" style="background:${esc(v.hex)}"></i>` : ''}<span onclick="vToggle(${i},${j})" title="اضغطي لإيقاف أو تفعيل">${esc(v.label)}</span><button onclick="vDel(${i},${j})" aria-label="حذف">${ic('x')}</button></span>`).join('') || '<span class="sub">لم تضيفي قيمًا بعد</span>'}</div>
+        ${g.kind === 'color' ? `<div class="sub" style="margin-top:10px">اضغطي لونًا جاهزًا لإضافته:</div><div class="sws">${COLORS.map(([n, h]) => `<button class="sw2" title="${n}" style="background:${h}" onclick="vAdd(${i},'${n}','${h}')"></button>`).join('')}</div>
+          <div class="row" style="margin-top:8px"><input type="color" id="gh_${i}" value="#cccccc" style="width:48px;padding:2px"><input id="gv_${i}" class="grow" placeholder="لون مخصص: اكتبي اسمه ثم اختاري اللون"><button class="btn soft sm" onclick="vAddIn(${i})">${ic('plus')} إضافة</button></div>`
+        : `<div class="row" style="margin-top:10px"><input id="gv_${i}" class="grow" placeholder="مثال: صغير" onkeydown="if(event.key==='Enter')vAddIn(${i})"><button class="btn soft sm" onclick="vAddIn(${i})">${ic('plus')} إضافة</button></div>`}</div>`).join('')}
+      <button class="btn soft" onclick="gAdd()">${ic('plus')} إضافة خيار آخر</button>`;
+    const t2 = `<div class="card"><div class="sub" style="margin-bottom:10px">المواد التي تُستخدم لصنع قطعة واحدة. تُخصم تلقائيًا من المخزون عند تأكيد الطلب، وتدخل في حساب التكلفة.</div>
+      ${f.mats.map((m, i) => `<div class="row" style="margin-bottom:8px"><select class="grow" onchange="pf.mats[${i}].item_id=this.value;render()">${invItems.map(x => `<option value="${x.id}" ${x.id === m.item_id ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select>
+        <div class="stp2"><input inputmode="decimal" value="${esc(m.qty)}" oninput="pf.mats[${i}].qty=this.value"><span class="sub" style="padding:0 10px">${esc(uni(m.item_id))}</span></div><button class="ibtn" onclick="pf.mats.splice(${i},1);render()" aria-label="حذف">${ic('x')}</button></div>`).join('') || '<div class="sub">لم تضيفي مواد بعد.</div>'}
+      <button class="btn soft" onclick="addMat()">${ic('plus')} إضافة مادة</button></div>`;
+    const t3 = `<div class="card"><div class="grid"><div><label class="lb">سعر القطعة (ر.س)</label><input type="text" inputmode="decimal" value="${esc(f.price)}" oninput="pf.price=this.value"></div>
+      <div><label class="lb">تكاليف إضافية للقطعة (ر.س)</label><input type="text" inputmode="decimal" value="${esc(f.extra_costs)}" oninput="pf.extra_costs=this.value"><div class="hint">مثل التغليف أو الأدوات.</div></div>
+      <div><label class="lb">سعر الجملة (اختياري)</label><input type="text" inputmode="decimal" value="${esc(f.wholesale_price)}" oninput="pf.wholesale_price=this.value"></div>
+      <div><label class="lb">تبدأ الجملة من كمية</label><input type="text" inputmode="numeric" value="${esc(f.wholesale_min_qty)}" oninput="pf.wholesale_min_qty=this.value"></div></div>
+      <button class="btn soft" style="margin-top:12px" onclick="suggest()">${ic('sparkles')} اقترحي لي سعرًا</button>
+      ${sug ? `<div class="sub" style="margin-top:10px">المواد ${money(sug.materials_cost)} + الأجر ${money(sug.labor_cost)} + إضافي ${money(sug.extra_costs)} = التكلفة ${money(sug.total_cost)}</div><div class="row" style="margin-top:8px"><button class="btn sm" onclick="pf.price=${sug.suggested_single};render()">اعتمدي ${money(sug.suggested_single)} للمفرد</button><button class="btn sm" onclick="pf.wholesale_price=${sug.suggested_wholesale};render()">اعتمدي ${money(sug.suggested_wholesale)} للجملة</button></div>` : ''}</div>`;
+    return `<button class="btn soft sm" onclick="go('products')">${ic('arrow-right')} المنتجات</button><h2 style="margin:10px 0">${f.id ? 'تعديل المنتج' : 'منتج جديد'}</h2>
+    <div class="tabs">${steps.map((t, i) => `<button class="${pfTab === i ? 'on' : ''}" onclick="pfTab=${i};render()">${i + 1} · ${t}</button>`).join('')}</div>${[t0, t1, t2, t3][pfTab]}
+    <div class="stickybar">${pfTab > 0 ? `<button class="btn soft" onclick="pfTab--;render()">السابق</button>` : ''}${pfTab < 3 ? `<button class="btn soft" onclick="pfTab++;render()">التالي</button>` : ''}<button class="btn grow" onclick="saveProduct()">${ic('save')} حفظ المنتج</button>${f.id ? `<button class="btn del" onclick="delProduct()" aria-label="حذف">${ic('trash-2')}</button>` : ''}</div>`;
   },
 
   async neworder() {
@@ -417,20 +485,32 @@ const V = {
     const who = { rama: 0, maryam: 0 }, prof = { rama: 0, maryam: 0 }; (p.data || []).forEach(r => { const k = staff[r.staff_id]?.key; if (k in who) who[k] += r.quantity; });
     (f.data || []).forEach(r => { prof[r.type === 'rama_profit' ? 'rama' : 'maryam'] += Number(r.amount); });
     const TP = top(prods), TC = top(cols), G = Object.keys(grow).sort();
+    const stC = {}; O.forEach(x => { const k = x.status === 'awaiting_confirmation' ? 'new' : x.status; stC[k] = (stC[k] || 0) + 1; });
+    const SE = [['over', 'نظرة عامة'], ['sales', 'المبيعات'], ['prod', 'المنتجات'], ['col', 'الألوان'], ['team', 'الفريق'], ['ord', 'حالة الطلبات']];
     post = () => {
-      Chart.defaults.font.family = 'Tajawal'; const ax = (t) => ({ title: { display: true, text: t }, beginAtZero: true, ticks: { precision: 0 } }), mk = (id, c) => new Chart($('#' + id), c), mv = '#5C7F6A';
-      mk('c_g', { type: 'line', data: { labels: G, datasets: [{ label: 'المبيعات', data: G.map(k => grow[k]), borderColor: mv, backgroundColor: '#E6D9CE', fill: true, tension: .3 }] }, options: { plugins: { legend: { display: false } }, scales: { x: { reverse: true, title: { display: true, text: 'التاريخ' } }, y: ax('المبيعات (ر.س)') } } });
-      mk('c_p', { type: 'bar', data: { labels: TP.map(x => x[0]), datasets: [{ data: TP.map(x => x[1]), backgroundColor: mv }] }, options: { plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'المنتج' } }, y: ax('الكمية المطلوبة') } } });
-      mk('c_c', { type: 'bar', data: { labels: TC.map(x => x[0]), datasets: [{ data: TC.map(x => x[1]), backgroundColor: '#D9A88F' }] }, options: { plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'اللون' } }, y: ax('الكمية المطلوبة') } } });
-      mk('c_w', { type: 'bar', data: { labels: ['راما', 'مريم'], datasets: [{ data: [who.rama, who.maryam], backgroundColor: ['#D9A88F', '#8AA7B8'] }] }, options: { plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'المنفذة' } }, y: ax('القطع المنجزة') } } });
+      Chart.defaults.font.family = 'Tajawal'; const col = getComputedStyle(document.documentElement).getPropertyValue('--mv').trim() || '#5C7F6A', lg = { legend: { display: false } },
+        ax = t => ({ title: { display: true, text: t }, beginAtZero: true, ticks: { precision: 0 } }), mk = (id, c) => { const el = $('#' + id); if (el) new Chart(el, c); };
+      mk('c_g', { type: 'line', data: { labels: G, datasets: [{ data: G.map(k => grow[k]), borderColor: col, backgroundColor: col + '22', fill: true, tension: .3 }] }, options: { plugins: lg, scales: { x: { reverse: true, title: { display: true, text: 'التاريخ' } }, y: ax('المبيعات (ر.س)') } } });
+      mk('c_p', { type: 'bar', data: { labels: TP.map(x => x[0]), datasets: [{ data: TP.map(x => x[1]), backgroundColor: col }] }, options: { plugins: lg, scales: { x: { title: { display: true, text: 'المنتج' } }, y: ax('القطع المطلوبة') } } });
+      mk('c_c', { type: 'bar', data: { labels: TC.map(x => x[0]), datasets: [{ data: TC.map(x => x[1]), backgroundColor: col }] }, options: { plugins: lg, scales: { x: { title: { display: true, text: 'اللون' } }, y: ax('القطع المطلوبة') } } });
+      mk('c_w', { type: 'bar', data: { labels: ['راما', 'مريم'], datasets: [{ data: [who.rama, who.maryam], backgroundColor: col }] }, options: { plugins: lg, scales: { x: { title: { display: true, text: 'المنفذة' } }, y: ax('القطع المنجزة') } } });
+      mk('c_s', { type: 'bar', data: { labels: Object.keys(stC).map(k => STU[k]), datasets: [{ data: Object.values(stC), backgroundColor: col }] }, options: { plugins: lg, scales: { x: { title: { display: true, text: 'الحالة' } }, y: ax('عدد الطلبات') } } });
     };
-    const kpi = (t, v) => `<div class="card"><div class="sub">${t}</div><b style="font-size:1.4rem;color:var(--mv)">${v}</b></div>`;
-    return `<h2>الإحصاءات</h2><div class="row" style="margin-bottom:12px">${[['week', 'أسبوع'], ['month', 'شهر'], ['year', 'سنة'], ['all', 'كل الوقت']].map(([k, t]) => `<button class="btn soft sm ${statP === k ? 'on' : ''}" onclick="statP='${k}';render()">${t}</button>`).join('')}</div>
-    <div class="grid">${kpi('إجمالي المبيعات', money(sum(done, 'total')))}${kpi('الطلبات المكتملة', done.length)}${kpi('الطلبات الملغاة', canc.length)}${kpi('القطع المنفذة', who.rama + who.maryam)}${kpi('راما: قطع · أرباح', who.rama + ' · ' + money(prof.rama))}${kpi('مريم: قطع · أرباح', who.maryam + ' · ' + money(prof.maryam))}</div>
-    <div class="card"><h3>نمو المبيعات</h3>${G.length ? '<canvas id="c_g" height="170"></canvas>' : '<div class="sub">لا مبيعات مكتملة في هذه الفترة.</div>'}</div>
-    <div class="card"><h3>أكثر المنتجات طلبًا</h3>${TP.length ? '<canvas id="c_p" height="170"></canvas>' : '<div class="sub">لا بيانات.</div>'}</div>
-    <div class="card"><h3>أكثر الألوان طلبًا</h3>${TC.length ? '<canvas id="c_c" height="170"></canvas>' : '<div class="sub">لا بيانات (يظهر عند وجود خيار باسم لون).</div>'}</div>
-    <div class="card"><h3>المنجز لكل واحدة</h3><canvas id="c_w" height="150"></canvas></div>`;
+    const kpi = (t, v, i) => `<div class="card"><div class="sub">${ic(i)} ${t}</div><b style="font-size:1.5rem;color:var(--mv)">${v}</b></div>`;
+    const hd = (t, d) => `<h3 style="margin:2px 2px 4px">${t}</h3><div class="sub" style="margin:0 2px 10px">${d}</div>`;
+    const cv = (id, has, msg) => `<div class="card">${has ? `<canvas id="${id}" height="170"></canvas>` : `<div class="sub">${msg}</div>`}</div>`;
+    const list = (arr, unit) => `<div class="card">${arr.map(([n, v], i) => `<div class="row" style="padding:6px 0;border-top:${i ? '1px dashed var(--mv-l)' : '0'}"><span class="grow">${i + 1}. ${esc(n)}</span><b>${v} ${unit}</b></div>`).join('') || '<div class="sub">لا بيانات بعد.</div>'}</div>`;
+    const tot = sum(done, 'total'), best = G.length ? Math.max(...G.map(k => grow[k])) : 0;
+    const S = {
+      over: `<div class="grid">${kpi('إجمالي المبيعات', money(tot), 'wallet')}${kpi('الطلبات المكتملة', done.length, 'check-circle-2')}${kpi('الطلبات الملغاة', canc.length, 'x')}${kpi('متوسط قيمة الطلب', money(done.length ? tot / done.length : 0), 'bar-chart-3')}${kpi('القطع المنفذة', who.rama + who.maryam, 'package')}${kpi('كل طلبات الفترة', O.length, 'clipboard-list')}</div>${cv('c_g', G.length, 'لا مبيعات مكتملة في هذه الفترة.')}`,
+      sales: hd('نمو المبيعات', 'مجموع مبيعات الطلبات المكتملة عبر الزمن.') + cv('c_g', G.length, 'لا مبيعات مكتملة في هذه الفترة.') + `<div class="grid">${kpi('إجمالي المبيعات', money(tot), 'wallet')}${kpi('أعلى يوم أو شهر', money(best), 'trending-up')}</div>`,
+      prod: hd('أكثر المنتجات طلبًا', 'مجموع القطع المطلوبة من كل منتج (بدون الطلبات الملغاة).') + cv('c_p', TP.length, 'لا بيانات بعد.') + list(TP, 'قطعة'),
+      col: hd('أكثر الألوان طلبًا', 'تُحسب من خيارات الطلب التي اسمها فيه كلمة "لون".') + cv('c_c', TC.length, 'لا بيانات بعد.') + list(TC, 'قطعة'),
+      team: hd('أداء راما ومريم', 'القطع المنجزة والأرباح المحتسبة في الفترة.') + `<div class="grid">${kpi('راما: قطع منجزة', who.rama, 'user')}${kpi('راما: الأرباح', money(prof.rama), 'wallet')}${kpi('مريم: قطع منجزة', who.maryam, 'user')}${kpi('مريم: الأرباح', money(prof.maryam), 'wallet')}</div>` + cv('c_w', who.rama + who.maryam, 'لا قطع منجزة بعد.'),
+      ord: hd('حالة الطلبات', 'توزيع طلبات الفترة حسب حالتها.') + cv('c_s', O.length, 'لا طلبات في هذه الفترة.')
+    };
+    return `<div class="ph"><h2>الإحصاءات</h2><div class="row">${[['week', 'أسبوع'], ['month', 'شهر'], ['year', 'سنة'], ['all', 'كل الوقت']].map(([k, t]) => `<button class="btn soft sm ${statP === k ? 'on' : ''}" onclick="statP='${k}';render()">${t}</button>`).join('')}</div></div>
+    <div class="tabs">${SE.map(([k, l]) => `<button class="${statT === k ? 'on' : ''}" onclick="statT='${k}';render()">${l}</button>`).join('')}</div>${S[statT]}`;
   },
 
   async notes() {
@@ -438,7 +518,7 @@ const V = {
     return `<div class="row"><h2 class="grow">لوحة الملاحظات</h2><button class="btn soft sm" onclick="showArch=!showArch;render()">${showArch ? 'العودة للوحة' : 'الأرشيف'}</button></div>
     ${showArch ? '' : `<div class="card dash"><textarea id="nt_b" rows="3" placeholder="اكتبي ملاحظة..."></textarea><div class="row" style="margin-top:10px"><select id="nt_c" style="width:auto"><option value="mauve">كريمي</option><option value="pink">خوخي</option><option value="peach">أخضر</option></select><button class="btn grow" onclick="addSticky()">إضافة</button></div></div>`}
     <div class="grid">${(data || []).map(n => `<div class="card" style="background:${NC[n.color] || NC.mauve};${n.pinned ? 'border:2px solid var(--mv)' : ''}"><div style="white-space:pre-wrap">${n.pinned ? ic('pin') + ' ' : ''}${esc(n.body)}</div>
-    <div class="sub" style="margin-top:8px">${esc(staff[n.author_id]?.name || '')} · ${ago(n.created_at)} · ${new Date(n.created_at).toLocaleDateString('ar-SA')}</div>
+    <div class="sub" style="margin-top:8px">${esc(staff[n.author_id]?.name || '')} · ${ago(n.created_at)} · ${new Date(n.created_at).toLocaleDateString('ar-u-ca-gregory-nu-latn')}</div>
     <div class="row" style="margin-top:8px"><button class="btn soft sm" onclick="upNote('${n.id}',{pinned:${!n.pinned}})">${n.pinned ? 'إلغاء التثبيت' : 'تثبيت'}</button><button class="btn soft sm" onclick="upNote('${n.id}',{archived:${!n.archived}})">${n.archived ? 'استرجاع' : 'أرشفة'}</button><button class="btn del sm" onclick="delNote('${n.id}')">حذف</button></div></div>`).join('') || '<div class="card sub empty">لا توجد ملاحظات.</div>'}</div>`;
   },
 
@@ -446,10 +526,10 @@ const V = {
     const { y, m } = cal, a = new Date(y, m, 1), b = new Date(y, m + 1, 1), f2 = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const [e, o] = await Promise.all([sb.from('calendar_events').select('*').gte('starts_at', a.toISOString()).lt('starts_at', b.toISOString()).order('starts_at'),
       sb.from('orders').select('id,order_no,customer_name,due_date').is('deleted_at', null).not('status', 'in', '(completed,cancelled)').gte('due_date', f2(a)).lt('due_date', f2(b))]);
-    const items = [...(e.data || []).map(x => ({ day: new Date(x.starts_at).getDate(), t: x.title, owner: x.owner, time: new Date(x.starts_at).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }), id: x.id, d: x.details })),
+    const items = [...(e.data || []).map(x => ({ day: new Date(x.starts_at).getDate(), t: x.title, owner: x.owner, time: new Date(x.starts_at).toLocaleTimeString('ar-u-ca-gregory-nu-latn', { hour: '2-digit', minute: '2-digit' }), id: x.id, d: x.details })),
       ...(o.data || []).map(x => ({ day: Number(x.due_date.slice(8)), t: 'موعد طلب: ' + x.customer_name, order: x.id }))].sort((p, q) => p.day - q.day);
     const off = (a.getDay() + 1) % 7, n = new Date(y, m + 1, 0).getDate(), cells = [...Array(off).fill(null), ...Array.from({ length: n }, (_, i) => i + 1)];
-    return `<div class="row"><button class="btn soft sm" onclick="calGo(1)">${ic('chevron-right')}</button><h2 class="grow" style="text-align:center;margin:0">${a.toLocaleDateString('ar-SA', { month: 'long', year: 'numeric' })}</h2><button class="btn soft sm" onclick="calGo(-1)">${ic('chevron-left')}</button></div>
+    return `<div class="row"><button class="btn soft sm" onclick="calGo(1)">${ic('chevron-right')}</button><h2 class="grow" style="text-align:center;margin:0">${a.toLocaleDateString('ar-u-ca-gregory-nu-latn', { month: 'long', year: 'numeric' })}</h2><button class="btn soft sm" onclick="calGo(-1)">${ic('chevron-left')}</button></div>
     <div class="card" style="margin-top:10px"><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center">${['س', 'ح', 'ن', 'ث', 'ر', 'خ', 'ج'].map(d => `<div class="sub">${d}</div>`).join('')}
     ${cells.map(d => d ? `<div onclick="cal.day='${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}T10:00';render()" style="padding:6px 0;border-radius:10px;cursor:pointer;background:${items.some(i => i.day === d) ? 'var(--pk)' : 'transparent'}">${d}<div style="display:flex;gap:2px;justify-content:center;min-height:6px">${items.filter(i => i.day === d).slice(0, 4).map(i => `<i style="width:6px;height:6px;border-radius:9px;background:${i.order ? '#9A8C96' : OC[i.owner]}"></i>`).join('')}</div></div>` : '<div></div>').join('')}</div>
     <div class="row sub" style="margin-top:8px">${Object.entries(ON).map(([k, v]) => `<span><i style="display:inline-block;width:8px;height:8px;border-radius:9px;background:${OC[k]}"></i> ${v}</span>`).join('')}<span><i style="display:inline-block;width:8px;height:8px;border-radius:9px;background:#9A8C96"></i> موعد طلب</span></div></div>
@@ -494,6 +574,15 @@ const V = {
   }
 };
 
+V.look = async () => `<h2>مظهر الموقع</h2><div class="sub">اختاري مظهرًا جاهزًا أو عدّلي الألوان بنفسك. يُحفظ تلقائيًا ويظهر لكما معًا على أي جهاز.</div>
+  <h3 style="margin:14px 0 8px">مظاهر جاهزة</h3><div class="grid">${Object.entries(THEMES).map(([k, [n, c]]) => `<div class="card click" onclick="setTheme('${k}')"><b>${n}</b><div class="row" style="margin-top:8px">${['primary', 'bg', 'soft', 'text'].map(x => `<i class="sw big" style="background:${c[x]}"></i>`).join('')}</div></div>`).join('')}</div>
+  <h3 style="margin:14px 0 8px">ألوان مخصصة</h3><div class="card"><div class="grid">${[['primary', 'اللون الأساسي (الأزرار والتحديد)'], ['bg', 'لون الخلفية'], ['card', 'لون البطاقات'], ['text', 'لون النص'], ['soft', 'لون التظليل الخفيف'], ['border', 'لون الإطارات']].map(([k, l]) => `<div class="row"><input type="color" value="${theme[k]}" style="width:52px;height:44px;padding:2px" oninput="tSet('${k}',this.value)"><span class="grow">${l}</span></div>`).join('')}</div></div>
+  <h3 style="margin:14px 0 8px">خيارات متقدمة</h3><div class="card"><label class="lb">استدارة الزوايا</label><div class="chips seg">${[[6, 'حادة'], [16, 'متوسطة'], [26, 'دائرية']].map(([v, l]) => `<button class="${theme.radius === v ? 'on' : ''}" onclick="tSet('radius',${v},true)">${l}</button>`).join('')}</div>
+  <label class="lb">حجم الخط</label><div class="chips seg">${[[15, 'صغير'], [16, 'عادي'], [18, 'كبير']].map(([v, l]) => `<button class="${theme.font === v ? 'on' : ''}" onclick="tSet('font',${v},true)">${l}</button>`).join('')}</div>
+  <label class="lb">كثافة الواجهة</label><div class="chips seg"><button class="${!theme.dense ? 'on' : ''}" onclick="tSet('dense',false,true)">مريحة</button><button class="${theme.dense ? 'on' : ''}" onclick="tSet('dense',true,true)">مضغوطة</button></div></div>
+  <button class="btn soft" style="margin-top:12px" onclick="tReset()">${ic('rotate-ccw')} إعادة المظهر الأصلي</button>`;
+for (const h in HUBS) V[h] = async () => tabsBar(h) + await V[HT[h]]();
+
 /* ---------- الإجراءات ---------- */
 async function upd(id, patch) { const { error } = await sb.from('orders').update(patch).eq('id', id); if (error) return toast(error.message); render(); }
 async function setStatus(id, s) { if (s === 'cancelled' && !await ask('إلغاء الطلب؟')) return render(); if (s === 'completed' && !await ask('سيتم احتساب الأرباح وتوزيعها عند الاكتمال. متأكدة؟')) return render(); upd(id, { status: s }); }
@@ -516,8 +605,8 @@ async function delOrder(id) {
 function adjust(id) {
   const i = invCache[id];
   form({ title: 'تعديل الكمية: ' + esc(i.name), sub: 'الكمية الحالية ' + Number(i.quantity) + ' ' + esc(i.unit) + '. يُسجَّل التعديل في حركة المخزون.', ok: 'تطبيق', done: 'تم تعديل الكمية',
-    fields: [{ id: 'k', label: 'نوع التعديل', type: 'select', options: [['add', 'إضافة كمية'], ['sub', 'خصم كمية'], ['set', 'تعيين الكمية الفعلية (جرد)']] }, { id: 'q', label: 'الكمية', type: 'number', req: 1 },
-      { id: 'r', label: 'السبب', type: 'select', options: [['adjustment', 'جرد / تصحيح'], ['waste', 'تالف أو ضائع']] }],
+    fields: [{ id: 'k', type: 'seg', label: 'نوع التعديل', value: 'add', options: [['add', 'إضافة'], ['sub', 'خصم'], ['set', 'تعيين الكمية الفعلية']] }, { id: 'q', type: 'stepper', label: 'الكمية', req: 1 },
+      { id: 'r', type: 'seg', label: 'السبب', value: 'adjustment', options: [['adjustment', 'جرد / تصحيح'], ['waste', 'تالف أو ضائع']] }],
     onSubmit: async v => { let d = Number(v.q); if (v.k === 'sub') d = -d; if (v.k === 'set') d = d - Number(i.quantity); if (!d) return 'لا يوجد تغيير في الكمية';
       const { error } = await sb.from('inventory_movements').insert({ item_id: id, delta: d, reason: v.r, note: 'تعديل يدوي', created_by: me.id }); if (error) return error.message; } });
 }
@@ -531,29 +620,28 @@ async function openNotif(id, link) {
   const [k, a] = link.split('/'); if (k === 'orders' && a) go('order', a); else if (k === 'inventory') go('inventory'); else if (k === 'chat') go('chat'); else render();
 }
 function addItem() {
-  form({ title: 'مادة جديدة', sub: 'أضيفي المادة مع كميتها الأولى في خطوة واحدة.', ok: 'إضافة المادة', done: 'أضيفت المادة',
-    fields: [{ id: 'name', label: 'اسم المادة', req: 1, ph: 'مثال: صوف سماوي' }, { id: 'cat', label: 'النوع', type: 'select', options: Object.entries(CAT) },
-      { id: 'unit', label: 'وحدة القياس', req: 1, value: 'كرة', list: ['كرة','متر','قطعة','علبة','كيس','رول','لفة'], hint: 'اختاري من القائمة أو اكتبي وحدة أخرى.' },
-      { id: 'min', label: 'حد التنبيه', type: 'number', value: '0', hint: 'ننبهك عندما تصل الكمية لهذا الرقم أو أقل.' },
-      { id: 'qty', label: 'الكمية الحالية', type: 'number', hint: 'اتركيها فارغة إن لم تشتري شيئًا بعد.' },
-      { id: 'cost', label: 'إجمالي المبلغ المدفوع لهذه الكمية (ر.س)', type: 'number', hint: 'لحساب تكلفة الوحدة تلقائيًا.' },
-      { id: 'from', label: 'من دفع؟', type: 'select', options: [['savings', 'المدخرات'], ['rama', 'راما'], ['maryam', 'مريم']] }],
-    onSubmit: async v => { const { data, error } = await sb.from('inventory_items').insert({ name: v.name, category: v.cat, unit: v.unit, min_quantity: Number(v.min) || 0 }).select('id').single(); if (error) return error.message;
+  form({ title: 'مادة جديدة', sub: 'أغلب الأسئلة اختيار بالضغط، ولا تحتاجين للكتابة إلا لاسم المادة.', ok: 'إضافة المادة', done: 'أضيفت المادة',
+    fields: [{ type: 'sec', label: '1 · ما نوع المادة؟' }, { id: 'cat', type: 'chips', label: 'النوع', value: 'yarn', options: Object.entries(CAT).map(([k, v]) => [k, v, CATI[k]]) },
+      { type: 'sec', label: '2 · الاسم واللون' }, { id: 'name', label: 'اسم المادة', req: 1, ph: 'مثال: صوف قطني', hint: 'اسم يميّزها عند اختيارها في المنتجات.' }, { id: 'color', type: 'swatch', label: 'اللون (اختياري، مفيد للصوف والخيوط)' },
+      { type: 'sec', label: '3 · الكمية' }, { id: 'unit', type: 'chips', label: 'وحدة القياس', value: 'كرة', options: UNITS.map(u => [u, u]) }, { id: 'qty', type: 'stepper', label: 'الكمية الموجودة الآن', value: '0' },
+      { id: 'min', type: 'stepper', label: 'نبّهني عندما تصل الكمية إلى', value: '1', hint: 'يظهر تنبيه "مادة ناقصة" عند هذا العدد أو أقل.' },
+      { type: 'sec', label: '4 · التكلفة (اختياري)' }, { id: 'cost', type: 'number', label: 'كم دفعتِ على هذه الكمية؟ (ر.س)', ph: '0.00', hint: 'نحسب منها تكلفة الوحدة تلقائيًا.' }, { id: 'from', type: 'seg', label: 'من دفع؟', value: 'savings', options: [['savings', 'المدخرات'], ['rama', 'راما'], ['maryam', 'مريم']] }],
+    onSubmit: async v => { const { data, error } = await sb.from('inventory_items').insert({ name: v.name, category: v.cat, unit: v.unit, min_quantity: Number(v.min) || 0, color: v.color || null }).select('id').single(); if (error) return error.message;
       if (Number(v.qty) > 0) { const r = await sb.rpc('record_purchase', { p_item: data.id, p_qty: Number(v.qty), p_total_cost: Number(v.cost) || 0, p_paid_from: v.from, p_note: 'الكمية الأولية' }); if (r.error) return 'أضيفت المادة لكن تعذّر تسجيل الكمية: ' + r.error.message; } } });
 }
 function buyItem(id) {
   const i = invCache[id];
   form({ title: 'تسجيل شراء: ' + esc(i.name), sub: 'تزيد الكمية ويُحدَّث متوسط التكلفة ويُسجَّل المصروف في المالية.', ok: 'تسجيل الشراء', done: 'تم تسجيل الشراء',
-    fields: [{ id: 'q', label: 'الكمية المشتراة (' + esc(i.unit) + ')', type: 'number', req: 1 }, { id: 'c', label: 'إجمالي المبلغ المدفوع (ر.س)', type: 'number', req: 1 },
-      { id: 'f', label: 'من دفع؟', type: 'select', options: [['savings', 'المدخرات'], ['rama', 'راما'], ['maryam', 'مريم']] }, { id: 'n', label: 'ملاحظة (اختياري)', ph: 'مثال: من محل ...' }],
+    fields: [{ id: 'q', type: 'stepper', label: 'الكمية المشتراة (' + esc(i.unit) + ')', req: 1, value: '1' }, { id: 'c', type: 'number', label: 'إجمالي المبلغ المدفوع (ر.س)', req: 1, ph: '0.00' },
+      { id: 'f', type: 'seg', label: 'من دفع؟', value: 'savings', options: [['savings', 'المدخرات'], ['rama', 'راما'], ['maryam', 'مريم']] }, { id: 'n', label: 'ملاحظة (اختياري)', ph: 'مثال: من محل ...' }],
     onSubmit: async v => { if (!(Number(v.q) > 0)) return 'الكمية يجب أن تكون أكبر من صفر'; const { error } = await sb.rpc('record_purchase', { p_item: id, p_qty: Number(v.q), p_total_cost: Number(v.c), p_paid_from: v.f, p_note: v.n || null }); if (error) return error.message; } });
 }
 function editItem(id) {
   const i = invCache[id];
   form({ title: 'تعديل المادة', ok: 'حفظ', done: 'تم الحفظ',
-    fields: [{ id: 'name', label: 'اسم المادة', req: 1, value: i.name }, { id: 'cat', label: 'النوع', type: 'select', options: Object.entries(CAT), value: i.category },
-      { id: 'unit', label: 'وحدة القياس', req: 1, value: i.unit, list: ['كرة','متر','قطعة','علبة','كيس','رول','لفة'] }, { id: 'min', label: 'حد التنبيه', type: 'number', value: String(i.min_quantity) }],
-    onSubmit: async v => { const { error } = await sb.from('inventory_items').update({ name: v.name, category: v.cat, unit: v.unit, min_quantity: Number(v.min) || 0 }).eq('id', id); if (error) return error.message; } });
+    fields: [{ id: 'cat', type: 'chips', label: 'النوع', value: i.category, options: Object.entries(CAT).map(([k, v]) => [k, v, CATI[k]]) }, { id: 'name', label: 'اسم المادة', req: 1, value: i.name }, { id: 'color', type: 'swatch', label: 'اللون', value: i.color || '' },
+      { id: 'unit', type: 'chips', label: 'وحدة القياس', value: i.unit, options: UNITS.map(u => [u, u]) }, { id: 'min', type: 'stepper', label: 'نبّهني عندما تصل الكمية إلى', value: String(i.min_quantity) }],
+    onSubmit: async v => { const { error } = await sb.from('inventory_items').update({ name: v.name, category: v.cat, unit: v.unit, min_quantity: Number(v.min) || 0, color: v.color || null }).eq('id', id); if (error) return error.message; } });
 }
 async function delItem(id) {
   if (!await ask('حذف المادة؟ يبقى محفوظًا ويمكن استرجاعه لاحقًا.')) return;
@@ -561,14 +649,24 @@ async function delItem(id) {
   if (error) return toast(error.message); render();
 }
 async function editProduct(id) {
-  const inv = await sb.from('inventory_items').select('id,name,unit').is('deleted_at', null).order('name'); invItems = inv.data || []; sug = null;
-  if (id === 'new') pf = { name: '', description: '', image_path: '', optionsText: '', est_hours: '', is_available: true, is_paused: false, price: '', wholesale_price: '', wholesale_min_qty: '', extra_costs: '', internal_notes: '', mats: [] };
+  await loadCats();
+  const inv = await sb.from('inventory_items').select('id,name,unit,color').is('deleted_at', null).order('name'); invItems = inv.data || []; sug = null; pfTab = 0;
+  if (id === 'new') pf = { name: '', description: '', image_path: '', est_hours: '', is_available: true, is_paused: false, price: '', wholesale_price: '', wholesale_min_qty: '', extra_costs: '', internal_notes: '', mats: [], ...(catOK ? { category_id: '' } : {}), groups: [{ name: 'اللون', kind: 'color', values: [] }] };
   else {
     const [p, pr, m] = await Promise.all([sb.from('products').select('*').eq('id', id).single(), sb.from('product_private').select('*').eq('product_id', id).maybeSingle(), sb.from('product_materials').select('item_id,qty_per_piece').eq('product_id', id)]);
-    pf = { ...p.data, optionsText: optsToText(p.data.options), extra_costs: pr.data?.extra_costs ?? '', internal_notes: pr.data?.internal_notes ?? '', mats: (m.data || []).map(x => ({ item_id: x.item_id, qty: x.qty_per_piece })) };
+    pf = { ...p.data, extra_costs: pr.data?.extra_costs ?? '', internal_notes: pr.data?.internal_notes ?? '', mats: (m.data || []).map(x => ({ item_id: x.item_id, qty: x.qty_per_piece })),
+      groups: (p.data.options || []).map(g => ({ name: g.name, kind: g.values.some(v => v.hex) ? 'color' : 'text', values: g.values.map(v => ({ label: v.label, hex: v.hex || '', available: v.available !== false })) })) };
   }
   go('product');
 }
+const pfOptions = () => pf.groups.filter(g => g.name.trim() && g.values.length).map(g => ({ name: g.name.trim(), values: g.values.map(v => ({ label: v.label, ...(v.hex ? { hex: v.hex } : {}), available: v.available !== false })) }));
+function gAdd() { pf.groups.push({ name: '', kind: 'text', values: [] }); render(); }
+function gDel(i) { pf.groups.splice(i, 1); render(); }
+function gKind(i, k) { pf.groups[i].kind = k; render(); }
+function vAdd(i, label, hex) { label = (label || '').trim(); if (!label) return toast('اكتبي اسم الخيار'); const g = pf.groups[i]; if (g.values.some(v => v.label === label)) return toast('هذا الخيار موجود'); g.values.push({ label, hex: hex || '', available: true }); render(); }
+function vAddIn(i) { vAdd(i, $('#gv_' + i).value, pf.groups[i].kind === 'color' ? $('#gh_' + i).value : ''); }
+function vDel(i, j) { pf.groups[i].values.splice(j, 1); render(); }
+function vToggle(i, j) { const v = pf.groups[i].values[j]; v.available = v.available === false; render(); }
 function addMat() { if (!invItems.length) return toast('أضيفي مادة في المخزون أولًا'); pf.mats.push({ item_id: invItems[0].id, qty: 1 }); render(); }
 async function upImg(file) {
   if (!file) return; const path = crypto.randomUUID() + '.' + (file.name.split('.').pop() || 'jpg').toLowerCase();
@@ -578,7 +676,8 @@ async function upImg(file) {
 async function saveProduct(quiet) {
   const f = pf, n = v => v === '' || v == null ? null : Number(v);
   if (!f.name.trim()) { toast('اكتبي اسم المنتج'); return false; }
-  const row = { name: f.name.trim(), description: f.description || null, price: n(f.price) || 0, wholesale_price: n(f.wholesale_price), wholesale_min_qty: n(f.wholesale_min_qty), est_hours: n(f.est_hours) || 0, is_available: f.is_available, is_paused: f.is_paused, image_path: f.image_path || null, options: textToOpts(f.optionsText || '') };
+  const row = { name: f.name.trim(), description: f.description || null, price: n(f.price) || 0, wholesale_price: n(f.wholesale_price), wholesale_min_qty: n(f.wholesale_min_qty), est_hours: n(f.est_hours) || 0, is_available: f.is_available, is_paused: f.is_paused, image_path: f.image_path || null, options: pfOptions() };
+  if ('category_id' in f) row.category_id = f.category_id || null;
   let id = f.id;
   if (id) { const { error } = await sb.from('products').update(row).eq('id', id); if (error) { toast(error.message); return false; } }
   else { const { data, error } = await sb.from('products').insert(row).select('id').single(); if (error) { toast(error.message); return false; } id = f.id = data.id; }
@@ -620,59 +719,4 @@ async function saveOrder() {
 }
 async function addEntry() {
   const t = $('#fe_t').value, a = $('#fe_a').value, m = parseFloat($('#fe_m').value), note = $('#fe_n').value.trim() || null;
-  if (isNaN(m) || (m === 0)) return toast('اكتبي المبلغ'); if (t !== 'adjustment' && m < 0) return toast('اكتبي المبلغ بدون سالب');
-  let rows;
-  if (t === 'income') rows = [{ type: t, account: 'general', amount: m }];
-  else if (t === 'expense' || t === 'withdrawal') rows = [{ type: t, account: a, amount: -m }];
-  else if (t === 'savings_transfer') { if (a === 'savings') return toast('اختاري راما أو مريم'); rows = [{ type: t, account: a, amount: -m }, { type: t, account: 'savings', amount: m }]; }
-  else rows = [{ type: t, account: a, amount: m }];
-  const { error } = await sb.from('finance_entries').insert(rows.map(r => ({ ...r, note, created_by: me.id }))); if (error) return toast(error.message); toast('تم التسجيل'); render();
-}
-async function voidEntry(id, v) {
-  const { error } = await sb.from('finance_entries').update(v ? { voided_at: new Date().toISOString(), voided_reason: 'إلغاء يدوي' } : { voided_at: null, voided_reason: null }).eq('id', id);
-  if (error) return toast(error.message); render();
-}
-async function chk(q, msg) { const r = await q; if (r.error) return toast(r.error.message); if (msg) toast(msg); render(); }
-function addLoc() { const n = $('#lc_n').value.trim(); if (!n) return toast('اكتبي اسم الموقع'); chk(sb.from('pickup_locations').insert({ name: n, instructions: $('#lc_i').value.trim() || null, sort_order: 99 })); }
-function upLoc(id, patch) { chk(sb.from('pickup_locations').update(patch).eq('id', id)); }
-function editLoc(id) {
-  const x = locMap[id];
-  form({ title: 'تعديل موقع الاستلام', ok: 'حفظ', done: 'تم الحفظ', fields: [{ id: 'n', label: 'اسم الموقع', req: 1, value: x.name }, { id: 'i', label: 'تعليمات للعميل', type: 'textarea', value: x.instructions || '', hint: 'تظهر للعميل في الفاتورة.' }],
-    onSubmit: async v => { const { error } = await sb.from('pickup_locations').update({ name: v.n, instructions: v.i || null }).eq('id', id); if (error) return error.message; } });
-}
-async function delLoc(id) { if (await ask('حذف الموقع؟ الطلبات القديمة تحتفظ باسمه.')) chk(sb.from('pickup_locations').delete().eq('id', id)); }
-function addOffer() {
-  const k = $('#of_k').value, t = $('#of_t').value.trim(); if (!t) return toast('اكتبي اسم العرض');
-  if (k === 'gift' && !$('#of_g').value) return toast('اختاري منتج الهدية');
-  chk(sb.from('offers').insert({ title: t, kind: k, value: Number($('#of_v').value) || 0, applies_to_product: $('#of_p').value || null, min_qty: Number($('#of_q').value) || 1, min_order_total: Number($('#of_m').value) || 0, gift_product_id: $('#of_g').value || null, gift_qty: Number($('#of_gq').value) || 1 }), 'تمت الإضافة');
-}
-function upOffer(id, patch) { chk(sb.from('offers').update(patch).eq('id', id)); }
-async function delOffer(id) { if (await ask('حذف العرض؟')) chk(sb.from('offers').delete().eq('id', id)); }
-async function upRev(id, patch) { if (patch.deleted_at && !await ask('حذف التعليق؟')) return; chk(sb.from('reviews').update(patch).eq('id', id)); }
-function addSticky() { const t = $('#nt_b').value.trim(); if (!t) return toast('اكتبي الملاحظة'); chk(sb.from('notes').insert({ body: t, color: $('#nt_c').value, author_id: me.id })); }
-function upNote(id, patch) { chk(sb.from('notes').update(patch).eq('id', id)); }
-async function delNote(id) { if (await ask('حذف الملاحظة؟ يمكن التراجع من سجل التعديلات.')) chk(sb.from('notes').update({ deleted_at: new Date().toISOString() }).eq('id', id)); }
-function calGo(d) { const x = new Date(cal.y, cal.m + d, 1); cal.y = x.getFullYear(); cal.m = x.getMonth(); render(); }
-function addEvent() {
-  const t = $('#ev_t').value.trim(), d = $('#ev_d').value; if (!t || !d) return toast('اكتبي العنوان واختاري الوقت');
-  chk(sb.from('calendar_events').insert({ title: t, starts_at: new Date(d).toISOString(), owner: $('#ev_o').value, details: $('#ev_n').value.trim() || null, created_by: me.id }), 'تمت الإضافة');
-}
-async function delEvent(id) { if (await ask('حذف الموعد؟')) chk(sb.from('calendar_events').delete().eq('id', id)); }
-async function fetchAll(t) { let out = [], i = 0; for (;;) { const { data, error } = await sb.from(t).select('*').range(i, i + 999); if (error) throw error; out = out.concat(data); if (data.length < 1000) break; i += 1000; } return out; }
-function download(name, text, type) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
-const csv = rows => { const k = Object.keys(rows[0]), c = v => `"${String(v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : v).replace(/"/g, '""')}"`; return '\ufeff' + [k.join(','), ...rows.map(r => k.map(x => c(r[x])).join(','))].join('\n'); };
-const today = () => new Date().toISOString().slice(0, 10);
-async function exportCsv(t) { try { const r = await fetchAll(t); if (!r.length) return toast('لا توجد بيانات'); download(`petali-${t}-${today()}.csv`, csv(r), 'text/csv;charset=utf-8'); } catch (e) { toast(e.message); } }
-async function exportAll() {
-  try { const out = { exported_at: new Date().toISOString() }; for (const t of ['orders', 'order_items', 'order_item_progress', 'order_events', 'products', 'product_private', 'product_materials', 'inventory_items', 'inventory_movements', 'finance_entries', 'pickup_locations', 'offers', 'reviews', 'notes', 'calendar_events', 'settings']) out[t] = await fetchAll(t); download(`petali-backup-${today()}.json`, JSON.stringify(out, null, 1), 'application/json'); toast('تم تنزيل النسخة'); } catch (e) { toast(e.message); }
-}
-async function undoAudit(id) { if (!await ask('التراجع عن هذا التعديل؟')) return; const { error } = await sb.rpc('undo_audit', { p_audit_id: id }); if (error) return toast('تعذّر التراجع: ' + error.message); toast('تم التراجع'); render(); }
-async function saveSet(k, v, t) {
-  if (t === 'num') { v = Number(v); if (isNaN(v) || v < 0) return toast('اكتبي رقمًا صحيحًا'); }
-  if (t === 'text' && !String(v).trim()) return toast('لا يمكن أن يكون فارغًا');
-  const { error } = await sb.from('settings').upsert({ id: k, value: v }); if (error) return toast(error.message); toast('تم الحفظ');
-}
-boot();
-</script>
-</body>
-</html>
+  if (isNaN(m) || (m === 0)) return toast('اكتبي المبلغ'); if (t !== 'adjustment' && m < 0) return toast('اكتبي المبلغ 
