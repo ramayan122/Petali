@@ -111,10 +111,21 @@ body{padding:0 0 calc(72px + env(safe-area-inset-bottom))}
 .btn{color:var(--onmv,#fff)}.btn.soft{color:var(--tx)}.btn.del{color:var(--warn)}.btn.on,.si.on{color:var(--onmv,#fff)}
 html,body{font-size:var(--fs,16px)}.card{border-radius:var(--r,16px);padding:var(--pad,14px)}.btn,input,select,textarea,.ibtn{border-radius:calc(var(--r,16px) - 4px)}
 .top{background:color-mix(in srgb,var(--card) 94%,transparent)}
+.empty::before{content:none!important;display:none!important}
 </style>
 </head>
 <body>
 <div id="app"></div><div id="toast"></div>
+<script>
+(function () {
+  window.__ok = false;
+  function show(m) { var a = document.getElementById('app'); if (a && !window.__ok) a.innerHTML = '<div style="padding:24px;max-width:560px;margin:40px auto;font-family:sans-serif;line-height:1.9;color:#4f454b"><h3>تعذّر تشغيل الصفحة</h3><p style="direction:ltr;text-align:left;background:#f3e9e1;padding:10px;border-radius:10px;font-size:.9rem">' + String(m).replace(/</g, '&lt;') + '</p><p>جرّبي: حدّثي بقوة (Ctrl+Shift+R)، أو <a href="?reset=1">أعيدي ضبط الإعدادات المحفوظة في المتصفح</a>. وإذا استمرت المشكلة أرسلي لي الرسالة أعلاه.</p></div>'; }
+  window.addEventListener('error', function (e) { show((e.message || 'error') + (e.lineno ? ' (line ' + e.lineno + ')' : '')); });
+  window.addEventListener('unhandledrejection', function (e) { show((e.reason && e.reason.message) || e.reason); });
+  setTimeout(function () { if (!window.__ok) show('Loading did not finish. The file may be incomplete, or the connection is slow.'); }, 9000);
+  if (location.search.indexOf('reset') > -1) { try { localStorage.removeItem('petali_theme'); Object.keys(localStorage).filter(function (k) { return k.indexOf('sb-') === 0; }).forEach(function (k) { localStorage.removeItem(k); }); } catch (e) {} }
+})();
+</script>
 <script>
 /* ===== إعدادات: ضعي هنا الرابط والمفتاح العام (anon) فقط. لا تضعي أي مفتاح سري. ===== */
 const CFG = {
@@ -183,7 +194,9 @@ function applyTheme(t) {
   set('--tx2', `color-mix(in srgb, ${t.text} 58%, ${t.bg})`); set('--onmv', lum(t.primary) > .45 ? '#1f1f1f' : '#ffffff'); set('--r', t.radius + 'px'); set('--fs', t.font + 'px'); set('--pad', t.dense ? '10px' : '14px');
   try { localStorage.setItem('petali_theme', JSON.stringify(t)); } catch (e) {}
 }
-try { const c = JSON.parse(localStorage.getItem('petali_theme')); if (c) { theme = { ...THEME0, ...c }; applyTheme(theme); } } catch (e) {}
+const okHex = h => /^#[0-9a-f]{6}$/i.test(h || '');
+function cleanTheme(c) { const t = { ...THEME0, ...c }; ['primary', 'bg', 'card', 'text', 'soft', 'border'].forEach(k => { if (!okHex(t[k])) t[k] = THEME0[k]; }); t.radius = Math.min(28, Math.max(0, Number(t.radius) || 16)); t.font = Math.min(20, Math.max(13, Number(t.font) || 16)); if (Math.abs(lum(t.bg) - lum(t.text)) < .25) { t.text = THEME0.text; t.bg = THEME0.bg; t.card = THEME0.card; } return t; }
+try { const c = JSON.parse(localStorage.getItem('petali_theme')); if (c) { theme = cleanTheme(c); applyTheme(theme); } } catch (e) {}
 function tSet(k, v, re) { theme[k] = v; applyTheme(theme); clearTimeout(tT); tT = setTimeout(() => sb.from('settings').upsert({ id: 'theme_admin', value: theme }).then(r => r.error && toast(r.error.message)), 600); if (re) render(); }
 function setTheme(k) { theme = { ...theme, ...THEMES[k][1] }; applyTheme(theme); tSet('primary', theme.primary, true); }
 function tReset() { theme = { ...THEME0 }; applyTheme(theme); tSet('primary', theme.primary, true); }
@@ -245,6 +258,7 @@ function ask(msg) {
 
 /* ---------- الدخول ---------- */
 function loginView(msg = '') {
+  window.__ok = true;
   app.innerHTML = `<div class="login"><div class="card">${logo()}<h2>مساحة بيتالي</h2><div class="sub">اختاري حسابك ثم اكتبي كلمة المرور</div>
   <div class="acc">${Object.entries(CFG.accounts).map(([k, a]) => `<button class="${picked === k ? 'on' : ''}" onclick="pick('${k}')">${a.name}</button>`).join('')}</div>
   ${picked ? `<input id="pw" type="password" placeholder="كلمة المرور" autocomplete="current-password" onkeydown="if(event.key==='Enter')signIn()"><button class="btn" style="width:100%;margin-top:10px" onclick="signIn()">دخول</button>` : ''}
@@ -261,7 +275,8 @@ async function signOut() { await sb.auth.signOut(); location.reload(); }
 
 /* ---------- التشغيل ---------- */
 async function boot() {
-  const { data: { session } } = await sb.auth.getSession();
+  const got = await Promise.race([sb.auth.getSession(), new Promise(r => setTimeout(() => r(null), 7000))]), session = got && got.data ? got.data.session : null;
+  if (!got) { try { Object.keys(localStorage).filter(k => k.startsWith('sb-')).forEach(k => localStorage.removeItem(k)); } catch (e) {} }
   if (!session) return loginView();
   const { data } = await sb.from('staff').select('id,key,name');
   (data || []).forEach(s => staff[s.id] = s);
@@ -271,7 +286,7 @@ async function boot() {
   app.innerHTML = `<aside class="side" id="side"></aside><div class="backdrop" id="bd" onclick="toggleSide(false)"></div>
   <div class="content"><header class="top"><button class="ibtn menu-btn" onclick="toggleSide(true)" aria-label="القائمة">${ic('menu')}</button><h1 id="ptitle"></h1><span class="grow"></span><button class="ibtn" id="bell" onclick="go('notifs')" aria-label="التنبيهات"></button><span class="chip">${ic('user')} ${esc(me.name)}</span><button class="ibtn" onclick="signOut()" aria-label="خروج">${ic('log-out')}</button></header><main class="wrap" id="main"></main></div><div class="tabbar" id="nav"></div>`;
   sb.rpc('generate_due_alerts');
-  await countUnread(); realtime(); go('home');
+  await countUnread(); realtime(); window.__ok = true; go('home');
 }
 async function countUnread() {
   const { count } = await sb.from('notifications').select('id', { count: 'exact', head: true }).is('read_at', null);
@@ -527,7 +542,7 @@ const V = {
     const [e, o] = await Promise.all([sb.from('calendar_events').select('*').gte('starts_at', a.toISOString()).lt('starts_at', b.toISOString()).order('starts_at'),
       sb.from('orders').select('id,order_no,customer_name,due_date').is('deleted_at', null).not('status', 'in', '(completed,cancelled)').gte('due_date', f2(a)).lt('due_date', f2(b))]);
     const items = [...(e.data || []).map(x => ({ day: new Date(x.starts_at).getDate(), t: x.title, owner: x.owner, time: new Date(x.starts_at).toLocaleTimeString('ar-u-ca-gregory-nu-latn', { hour: '2-digit', minute: '2-digit' }), id: x.id, d: x.details })),
-      ...(o.data || []).map(x => ({ day: Number(x.due_date.slice(8)), t: 'موعد طلب: ' + x.customer_name, order: x.id }))].sort((p, q) => p.day - q.day);
+      ...(o.data || []).map(x => ({ day: Number(String(x.due_date || '').slice(8)), t: 'موعد طلب: ' + x.customer_name, order: x.id }))].sort((p, q) => p.day - q.day);
     const off = (a.getDay() + 1) % 7, n = new Date(y, m + 1, 0).getDate(), cells = [...Array(off).fill(null), ...Array.from({ length: n }, (_, i) => i + 1)];
     return `<div class="row"><button class="btn soft sm" onclick="calGo(1)">${ic('chevron-right')}</button><h2 class="grow" style="text-align:center;margin:0">${a.toLocaleDateString('ar-u-ca-gregory-nu-latn', { month: 'long', year: 'numeric' })}</h2><button class="btn soft sm" onclick="calGo(-1)">${ic('chevron-left')}</button></div>
     <div class="card" style="margin-top:10px"><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center">${['س', 'ح', 'ن', 'ث', 'ر', 'خ', 'ج'].map(d => `<div class="sub">${d}</div>`).join('')}
@@ -719,4 +734,92 @@ async function saveOrder() {
 }
 async function addEntry() {
   const t = $('#fe_t').value, a = $('#fe_a').value, m = parseFloat($('#fe_m').value), note = $('#fe_n').value.trim() || null;
-  if (isNaN(m) || (m === 0)) return toast('اكتبي المبلغ'); if (t !== 'adjustment' && m < 0) return toast('اكتبي المبلغ 
+  if (isNaN(m) || (m === 0)) return toast('اكتبي المبلغ'); if (t !== 'adjustment' && m < 0) return toast('اكتبي المبلغ بدون سالب');
+  let rows;
+  if (t === 'income') rows = [{ type: t, account: 'general', amount: m }];
+  else if (t === 'expense' || t === 'withdrawal') rows = [{ type: t, account: a, amount: -m }];
+  else if (t === 'savings_transfer') { if (a === 'savings') return toast('اختاري راما أو مريم'); rows = [{ type: t, account: a, amount: -m }, { type: t, account: 'savings', amount: m }]; }
+  else rows = [{ type: t, account: a, amount: m }];
+  const { error } = await sb.from('finance_entries').insert(rows.map(r => ({ ...r, note, created_by: me.id }))); if (error) return toast(error.message); toast('تم التسجيل'); render();
+}
+async function voidEntry(id, v) {
+  const { error } = await sb.from('finance_entries').update(v ? { voided_at: new Date().toISOString(), voided_reason: 'إلغاء يدوي' } : { voided_at: null, voided_reason: null }).eq('id', id);
+  if (error) return toast(error.message); render();
+}
+async function chk(q, msg) { const r = await q; if (r.error) return toast(r.error.message); if (msg) toast(msg); render(); }
+function addLoc() { const n = $('#lc_n').value.trim(); if (!n) return toast('اكتبي اسم الموقع'); chk(sb.from('pickup_locations').insert({ name: n, instructions: $('#lc_i').value.trim() || null, sort_order: 99 })); }
+function upLoc(id, patch) { chk(sb.from('pickup_locations').update(patch).eq('id', id)); }
+function editLoc(id) {
+  const x = locMap[id];
+  form({ title: 'تعديل موقع الاستلام', ok: 'حفظ', done: 'تم الحفظ', fields: [{ id: 'n', label: 'اسم الموقع', req: 1, value: x.name }, { id: 'i', label: 'تعليمات للعميل', type: 'textarea', value: x.instructions || '', hint: 'تظهر للعميل في الفاتورة.' }],
+    onSubmit: async v => { const { error } = await sb.from('pickup_locations').update({ name: v.n, instructions: v.i || null }).eq('id', id); if (error) return error.message; } });
+}
+async function delLoc(id) { if (await ask('حذف الموقع؟ الطلبات القديمة تحتفظ باسمه.')) chk(sb.from('pickup_locations').delete().eq('id', id)); }
+function addOffer() {
+  const k = $('#of_k').value, t = $('#of_t').value.trim(); if (!t) return toast('اكتبي اسم العرض');
+  if (k === 'gift' && !$('#of_g').value) return toast('اختاري منتج الهدية');
+  chk(sb.from('offers').insert({ title: t, kind: k, value: Number($('#of_v').value) || 0, applies_to_product: $('#of_p').value || null, min_qty: Number($('#of_q').value) || 1, min_order_total: Number($('#of_m').value) || 0, gift_product_id: $('#of_g').value || null, gift_qty: Number($('#of_gq').value) || 1 }), 'تمت الإضافة');
+}
+function upOffer(id, patch) { chk(sb.from('offers').update(patch).eq('id', id)); }
+async function delOffer(id) { if (await ask('حذف العرض؟')) chk(sb.from('offers').delete().eq('id', id)); }
+async function upRev(id, patch) { if (patch.deleted_at && !await ask('حذف التعليق؟')) return; chk(sb.from('reviews').update(patch).eq('id', id)); }
+function addSticky() { const t = $('#nt_b').value.trim(); if (!t) return toast('اكتبي الملاحظة'); chk(sb.from('notes').insert({ body: t, color: $('#nt_c').value, author_id: me.id })); }
+function upNote(id, patch) { chk(sb.from('notes').update(patch).eq('id', id)); }
+async function delNote(id) { if (await ask('حذف الملاحظة؟ يمكن التراجع من سجل التعديلات.')) chk(sb.from('notes').update({ deleted_at: new Date().toISOString() }).eq('id', id)); }
+function calGo(d) { const x = new Date(cal.y, cal.m + d, 1); cal.y = x.getFullYear(); cal.m = x.getMonth(); render(); }
+function addEvent() {
+  const t = $('#ev_t').value.trim(), d = $('#ev_d').value; if (!t || !d) return toast('اكتبي العنوان واختاري الوقت');
+  chk(sb.from('calendar_events').insert({ title: t, starts_at: new Date(d).toISOString(), owner: $('#ev_o').value, details: $('#ev_n').value.trim() || null, created_by: me.id }), 'تمت الإضافة');
+}
+async function delEvent(id) { if (await ask('حذف الموعد؟')) chk(sb.from('calendar_events').delete().eq('id', id)); }
+async function fetchAll(t) { let out = [], i = 0; for (;;) { const { data, error } = await sb.from(t).select('*').range(i, i + 999); if (error) throw error; out = out.concat(data); if (data.length < 1000) break; i += 1000; } return out; }
+function download(name, text, type) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
+const csv = rows => { const k = Object.keys(rows[0]), c = v => `"${String(v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : v).replace(/"/g, '""')}"`; return '\ufeff' + [k.join(','), ...rows.map(r => k.map(x => c(r[x])).join(','))].join('\n'); };
+const today = () => new Date().toISOString().slice(0, 10);
+async function exportCsv(t) { try { const r = await fetchAll(t); if (!r.length) return toast('لا توجد بيانات'); download(`petali-${t}-${today()}.csv`, csv(r), 'text/csv;charset=utf-8'); } catch (e) { toast(e.message); } }
+async function exportAll() {
+  try { const out = { exported_at: new Date().toISOString() }; for (const t of ['orders', 'order_items', 'order_item_progress', 'order_events', 'products', 'product_private', 'product_materials', 'inventory_items', 'inventory_movements', 'finance_entries', 'pickup_locations', 'offers', 'reviews', 'notes', 'calendar_events', 'settings']) out[t] = await fetchAll(t); download(`petali-backup-${today()}.json`, JSON.stringify(out, null, 1), 'application/json'); toast('تم تنزيل النسخة'); } catch (e) { toast(e.message); }
+}
+async function undoAudit(id) { if (!await ask('التراجع عن هذا التعديل؟')) return; const { error } = await sb.rpc('undo_audit', { p_audit_id: id }); if (error) return toast('تعذّر التراجع: ' + error.message); toast('تم التراجع'); render(); }
+async function saveSet(k, v, t) {
+  if (t === 'num') { v = Number(v); if (isNaN(v) || v < 0) return toast('اكتبي رقمًا صحيحًا'); }
+  if (t === 'text' && !String(v).trim()) return toast('لا يمكن أن يكون فارغًا');
+  const { error } = await sb.from('settings').upsert({ id: k, value: v }); if (error) return toast(error.message); toast('تم الحفظ');
+}
+function oPick(id, on) { on ? oSel.add(id) : oSel.delete(id); render(); }
+async function oTrash(ids) { if (!await ask('نقل ' + ids.length + ' طلب إلى المحذوفات؟ يمكنك استرجاعها لاحقًا.')) return; const { error } = await sb.from('orders').update({ deleted_at: new Date().toISOString() }).in('id', ids); if (error) return toast(error.message); oSel.clear(); oSelMode = false; toast('نُقلت إلى المحذوفات', true); render(); }
+async function oRestore(id) { const { error } = await sb.from('orders').update({ deleted_at: null }).eq('id', id); if (error) return toast(error.message); toast('تم الاسترجاع', true); render(); }
+async function oPurge(ids) {
+  if (!await ask('حذف ' + ids.length + ' طلب نهائيًا؟ لا يمكن التراجع. تُحذف قيوده المالية وتُرجع مواده للمخزون.')) return;
+  for (const id of ids) { const { error } = await sb.rpc('delete_order_permanently', { p_order: id }); if (error) return toast(/function|does not exist|schema cache/i.test(error.message) ? 'شغّلي ملف 04_orders_delete.sql أولًا (' + error.message + ')' : error.message); }
+  oSel.clear(); oSelMode = false; toast('تم الحذف النهائي', true); render();
+}
+async function advance(id) {
+  const { data: r } = await sb.from('orders').select('status,executor,due_date,deposit_required').eq('id', id).single(), nx = NEXT[r.status]; if (!nx) return;
+  if (nx[0] === 'final_confirmed') return form({ title: 'تأكيد الطلب', sub: 'تأكدي أنك تواصلتِ مع العميل عبر واتساب وأنه ما زال يريد الطلب.' + (r.deposit_required ? ' هذا طلب كبير، يُنصح بأخذ عربون.' : '') + ' يُخصم ما يلزم من المخزون عند التأكيد.', ok: 'تأكيد الطلب', done: 'تم تأكيد الطلب', fields: [],
+    onSubmit: async () => { const { error } = await sb.from('orders').update({ status: 'final_confirmed' }).eq('id', id); if (error) return error.message; } });
+  if (nx[0] === 'in_progress') return form({ title: 'بدء التنفيذ', ok: 'ابدئي التنفيذ', done: 'بدأ التنفيذ', fields: [{ id: 'ex', label: 'من تنفذ الطلب', type: 'select', req: 1, value: r.executor || '', options: [['', 'اختاري'], ['rama', 'راما'], ['maryam', 'مريم'], ['both', 'راما ومريم معًا']] }, { id: 'due', label: 'الموعد المستهدف للإنجاز', type: 'date', value: r.due_date || '' }],
+    onSubmit: async v => { const { error } = await sb.from('orders').update({ status: 'in_progress', executor: v.ex, due_date: v.due || null }).eq('id', id); if (error) return error.message; } });
+  setStatus(id, nx[0]);
+}
+async function progIns(id, d) {
+  const y = scrollY, { error } = await sb.from('order_item_progress').insert({ order_item_id: id, staff_id: me.id, quantity: d });
+  if (error) return toast(error.message.includes('exceeds') ? 'أكبر من الكمية المطلوبة' : error.message.includes('negative') ? 'لا يمكن أن يقل عن صفر' : error.message);
+  await render(); scrollTo(0, y);
+}
+async function prog(id, d, mine) { if (d < 0 && mine < 1) return toast('التصحيح يكون ممن سجّل الإنجاز (راما أو مريم نفسها)'); await progIns(id, d); }
+async function progSet(id, val, cur, mine, q) {
+  const n = parseInt(val); if (isNaN(n) || n < 0 || n > q) { toast('اكتبي رقمًا بين 0 و ' + q); return render(); }
+  const d = n - cur; if (!d) return; if (d < 0 && mine < -d) { toast('التصحيح يكون ممن سجّل الإنجاز'); return render(); } await progIns(id, d);
+}
+function catManager() {
+  openM(`<div class="mh"><h3>أقسام المنتجات</h3><button class="ibtn" onclick="closeM();render()" aria-label="إغلاق">${ic('x')}</button></div><div class="sub">مثل: سكرنشيز، بندانات، ربطات. تنظّم منتجاتك وتفلترينها بسهولة.</div><div id="cml">${catList()}</div>
+  <div class="row" style="margin-top:12px"><input class="grow" id="cm_n" placeholder="اسم قسم جديد" onkeydown="if(event.key==='Enter')catAdd()"><button class="btn" onclick="catAdd()">${ic('plus')} إضافة</button></div><div class="err" id="cm_e"></div>`);
+}
+async function catAdd() { const n = $('#cm_n').value.trim(); if (!n) return; const { error } = await sb.from('product_categories').insert({ name: n, sort_order: catCache.length }); if (error) { $('#cm_e').textContent = /does not exist|schema cache/i.test(error.message) ? 'شغّلي ملف 06_product_categories.sql أولًا' : error.message; return; } await loadCats(); $('#cml').innerHTML = catList(); $('#cm_n').value = ''; icons(); }
+function catRename(id) { const c = catCache.find(x => x.id === id); form({ title: 'تعديل اسم القسم', ok: 'حفظ', done: 'تم الحفظ', fields: [{ id: 'n', label: 'اسم القسم', req: 1, value: c.name }], onSubmit: async v => { const { error } = await sb.from('product_categories').update({ name: v.n }).eq('id', id); if (error) return error.message; } }); }
+async function catDel(id) { if (!await ask('حذف القسم؟ المنتجات تبقى وتصير بدون قسم.')) return; const { error } = await sb.from('product_categories').delete().eq('id', id); if (error) return toast(error.message); if (pcat === id) pcat = 'all'; toast('تم الحذف', true); render(); }
+boot();
+</script>
+</body>
+</html>
