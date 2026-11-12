@@ -61,7 +61,10 @@ body{padding:0 0 calc(72px + env(safe-area-inset-bottom))}
 .side{position:fixed;inset-block:0;inset-inline-start:0;width:264px;background:var(--card);border-inline-end:1px solid var(--mv-l);padding:14px 12px;overflow-y:auto;z-index:30;transform:translateX(100%);transition:transform .22s}
 .side.open{transform:none;box-shadow:0 0 40px rgba(0,0,0,.18)}
 .sb-h{display:flex;align-items:center;gap:10px;padding:4px 8px 14px;border-bottom:1px dashed var(--mv-l);margin-bottom:6px}.sb-h img{height:34px}.brand{font-weight:700;color:var(--mv)}
-.gt{font-size:.74rem;color:var(--tx2);padding:14px 10px 4px}
+.gt{font-size:.78rem;font-weight:700;color:var(--mv);padding:16px 10px 4px;border-top:1px solid var(--mv-l);margin-top:8px}.gt:first-child{border-top:0;margin-top:0}
+.ball{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border:1.5px solid var(--mv-l);border-radius:14px;background:var(--card);cursor:pointer;color:var(--mv);font-size:.8rem}.ball:hover,.ball.on{border-color:var(--mv);box-shadow:0 0 0 2px var(--mv)}.balls{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0}
+@media(max-width:520px){.balls{grid-template-columns:repeat(3,1fr)}}
+.pkc{padding:6px 0;border-top:1px dashed var(--mv-l)}
 .si{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;border-radius:12px;padding:9px 10px;cursor:pointer;color:var(--tx);text-align:start}
 .si:hover{background:var(--pe)}.si.on{background:var(--mv);color:#fff;font-weight:700}
 .backdrop{display:none;position:fixed;inset:0;background:rgba(40,30,30,.35);z-index:25}.backdrop.on{display:block}
@@ -112,6 +115,7 @@ html,body{font-size:var(--fs,16px)}.card{border-radius:var(--r,16px);padding:var
 .top{background:color-mix(in srgb,var(--card) 94%,transparent)}
 .empty::before{content:none!important;display:none!important}
 .stitch{display:none!important}
+.stitch,.scal::before,.hero::after,h2::before{display:none!important}
 </style>
 </head>
 <body>
@@ -150,7 +154,7 @@ const AL = { INSERT:'إضافة', UPDATE:'تعديل', DELETE:'حذف' };
 const FL = { name:'الاسم', price:'السعر', status:'الحالة', executor:'المنفذة', due_date:'الموعد', deleted_at:'الحذف', is_paused:'الإيقاف', is_available:'التوفر', description:'الوصف', amount:'المبلغ', voided_at:'الإلغاء', is_visible:'الظهور', is_active:'التفعيل', pinned:'التثبيت', archived:'الأرشفة', body:'النص', wholesale_price:'سعر الجملة', options:'الخيارات', min_quantity:'حد التنبيه', title:'العنوان', quantity:'الكمية', unit_cost:'التكلفة', customer_name:'اسم العميل', customer_phone:'رقم التواصل' };
 let no = null, prodCache = [], locCache = [], locMap = {};
 const FT = { income:'دخل', expense:'مصروف', savings_transfer:'تحويل للمدخرات', material_purchase:'شراء مواد', rama_profit:'أرباح راما', maryam_profit:'أرباح مريم', materials_reimbursement:'تكلفة مواد', rounding_to_savings:'باقي القسمة', withdrawal:'سحب أرباح', adjustment:'تعديل' };
-const AC = { savings:'المدخرات', rama:'راما', maryam:'مريم', general:'عام' };
+const AC = { savings:'بيتالي (المدخرات)', rama:'راما', maryam:'مريم', general:'عام' };
 const defOpts = p => Object.fromEntries((p?.options || []).map(g => [g.name, g.values[0].label]));
 const newItem = () => ({ pid: prodCache[0]?.id, qty: 1, opts: defOpts(prodCache[0]), gift: false });
 let pf = null, invItems = [], invCache = {}, sug = null;
@@ -217,12 +221,14 @@ const ICONS = {
 ICONS.boxes = ICONS.package;
 const ic = n => `<svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || '<circle cx="12" cy="12" r="3"/>'}</svg>`;
 const icons = () => {};
-const NAV = [['', [['home','home','الرئيسية'],['orders','clipboard-list','الطلبات'],['catalog','shopping-bag','المنتجات والمخزون'],['money','wallet','المالية والإحصاءات'],['org','calendar','الجدول والملاحظات والشات'],['admin','settings','الإعدادات']]]];
-const HUBS = { catalog:[['products','المنتجات'],['inventory','المخزون']], money:[['finance','المالية'],['stats','الإحصاءات']], org:[['calendar','الجدول'],['notes','الملاحظات'],['chat','الشات']], admin:[['look','المظهر'],['settings','الإعدادات العامة'],['locations','مواقع الاستلام'],['offers','العروض والخصومات'],['reviews','التقييمات'],['export','التصدير'],['undo','سجل التعديلات']] };
-const HT = { catalog:'products', money:'finance', org:'calendar', admin:'settings' };
-const HUB_OF = Object.fromEntries(Object.entries(HUBS).flatMap(([h, t]) => t.map(([k]) => [k, h])));
-const GRP = { order:'orders', neworder:'orders', product:'catalog', notifs:'' };
-const TITLES = { home:'الرئيسية', orders:'الطلبات', catalog:'المنتجات والمخزون', money:'المالية والإحصاءات', org:'الجدول والملاحظات والشات', admin:'الإعدادات', notifs:'التنبيهات', order:'تفاصيل الطلب', neworder:'طلب جديد', product:'المنتج' };
+const NAV = [
+  ['الأقسام التشغيلية', [['home','home','الرئيسية'],['orders','clipboard-list','الطلبات'],['products','shopping-bag','المنتجات'],['inventory','boxes','المخزون'],['finance','wallet','المالية'],['stats','bar-chart-3','الإحصاءات'],['calendar','calendar','الجدول'],['notes','sticky-note','الملاحظات'],['chat','message-circle','الشات']]],
+  ['أقسام المتجر', [['offers','tag','العروض والخصومات'],['reviews','star','التقييمات'],['locations','map-pin','مواقع الاستلام'],['counters','users','عدادات الموقع']]],
+  ['الأقسام الإدارية', [['look','palette','المظهر'],['settings','settings','الإعدادات العامة'],['export','download','التصدير'],['trash','trash-2','السجل والمحذوفات']]]
+];
+const HUBS = {}, HT = {}, HUB_OF = {};
+const GRP = { order:'orders', neworder:'orders', product:'products', undo:'trash', notifs:'' };
+const TITLES = { home:'الرئيسية', orders:'الطلبات', products:'المنتجات', inventory:'المخزون', finance:'المالية', stats:'الإحصاءات', calendar:'الجدول', notes:'الملاحظات', chat:'الشات', offers:'العروض والخصومات', reviews:'التقييمات', locations:'مواقع الاستلام', counters:'عدادات الموقع', look:'المظهر', settings:'الإعدادات العامة', export:'التصدير', trash:'السجل والمحذوفات', undo:'سجل التعديلات', notifs:'التنبيهات', order:'تفاصيل الطلب', neworder:'طلب جديد', product:'المنتج' };
 const STU = { new:'جديد', final_confirmed:'مؤكد', in_progress:'قيد التنفيذ', ready:'جاهز للاستلام', completed:'مكتمل', cancelled:'ملغي' };
 const NEXT = { new:['final_confirmed','تأكيد الطلب','check-circle-2'], awaiting_confirmation:['final_confirmed','تأكيد الطلب','check-circle-2'], final_confirmed:['in_progress','بدء التنفيذ','play'], in_progress:['ready','جاهز للاستلام','package'], ready:['completed','تم التسليم','check'] };
 const fmtD = d => new Date(d).toLocaleDateString('ar-u-ca-gregory-nu-latn', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -235,7 +241,9 @@ const oCard = r => { const n = (r.order_items || []).reduce((t, i) => t + i.quan
   ${r.deleted_at ? `<div class="row"><button class="btn soft sm" onclick="oRestore('${r.id}')">${ic('rotate-ccw')} استرجاع</button><button class="btn del sm" onclick="oPurge(['${r.id}'])">${ic('trash-2')} حذف نهائي</button></div>` : (nx && !oSelMode ? `<button class="btn sm" onclick="event.stopPropagation();advance('${r.id}')">${ic(nx[2])} ${nx[1]}</button>` : '')}</div>`; };
 const tabsBar = h => `<div class="tabs">${HUBS[h].map(([k, l]) => `<button class="${HT[h] === k ? 'on' : ''}" onclick="setTab('${h}','${k}')">${l}</button>`).join('')}</div>`;
 function setTab(h, k) { HT[h] = k; render(); }
-const COLORS = [['أبيض','#FFFFFF'],['كريمي','#F5EBDD'],['بيج','#D9C3A5'],['بني','#8B5E3C'],['أسود','#2B2B2B'],['رمادي','#9AA0A6'],['سماوي','#8EC5E8'],['أزرق','#3F6FB5'],['كحلي','#223A5E'],['أخضر','#6BAA75'],['زيتي','#7D8450'],['أصفر','#F2D262'],['برتقالي','#E9A15B'],['خوخي','#F3C7B0'],['وردي','#EFA6B8'],['أحمر','#C8514B'],['موفي','#9B7BB5']];
+let YC = [];
+let COLORS = [['أبيض','#FFFFFF'],['كريمي','#F5EBDD'],['بيج','#D9C3A5'],['بني','#8B5E3C'],['أسود','#2B2B2B'],['رمادي','#9AA0A6'],['سماوي','#8EC5E8'],['أزرق','#3F6FB5'],['كحلي','#223A5E'],['أخضر','#6BAA75'],['زيتي','#7D8450'],['أصفر','#F2D262'],['برتقالي','#E9A15B'],['خوخي','#F3C7B0'],['وردي','#EFA6B8'],['أحمر','#C8514B'],['موفي','#9B7BB5']];
+const PAYERS = [['savings', 'بيتالي (المدخرات)'], ['rama', 'راما'], ['maryam', 'مريم']];
 const UNITS = ['كرة','متر','قطعة','علبة','كيس','رول','لفة'];
 let pfTab = 0;
 const FONTS = { tajawal:['تجوال','Tajawal'], plex:['آي بي إم بلكس','"IBM Plex Sans Arabic"'], cairo:['القاهرة','Cairo'], almarai:['المراعي','Almarai'], readex:['ريديكس','"Readex Pro"'] };
@@ -283,6 +291,87 @@ const itemCard = (i, x, opts) => { const q = i.quantity, d = x.done_total, mine 
   <div class="bar thick" style="margin-top:8px"><i style="width:${pct(d, q)}%"></i></div>
   <div class="row" style="margin-top:10px"><div class="stp2"><button onclick="prog('${i.id}',-1,${mine})" aria-label="تصحيح: إنقاص">${ic('minus')}</button><input inputmode="numeric" value="${d}" aria-label="العدد المنجز" onchange="progSet('${i.id}',this.value,${d},${mine},${q})"><button onclick="prog('${i.id}',1,${mine})" ${ok ? 'disabled' : ''} aria-label="أنجزت واحدة">${ic('plus')}</button></div>
   ${ok ? `<span class="tag s-ready">${ic('check')} مكتملة</span>` : `<button class="btn soft sm" onclick="progSet('${i.id}',${q},${d},${mine},${q})">${ic('check-check')} اكتملت كلها</button>`}<span class="sub grow">راما ${x.done_rama || 0} · مريم ${x.done_maryam || 0}</span></div></div>`; };
+
+/* ---------- شراء باقة ---------- */
+function packBuy() {
+  const rows = COLORS.map(([n, h], i) => `<div class="row pkc"><i class="sw big" style="background:${esc(h)}"></i><b class="grow">${esc(n)}</b><div class="stp2"><button type="button" onclick="pkStep('pk_c${i}',-1)" aria-label="إنقاص">${ic('minus')}</button><input id="pk_c${i}" inputmode="numeric" value="0" oninput="pkSum()"><button type="button" onclick="pkStep('pk_c${i}',1)" aria-label="زيادة">${ic('plus')}</button></div></div>`).join('');
+  openM(`<div class="mh"><h3>شراء باقة</h3><button class="ibtn" onclick="closeM()" aria-label="إغلاق">${ic('x')}</button></div><div class="sub">مثال: 10 كرات صوف بـ40 ريال + رسوم توصيل. نوزّع التكلفة الكلية على القطع والألوان تلقائيًا.</div>
+  ${[{ id: 'name', label: 'اسم الخامة', req: 1, ph: 'مثال: صوف فابريك' }, { id: 'cat', type: 'chips', label: 'النوع', value: 'yarn', options: Object.entries(CAT).map(([k, v]) => [k, v, CATI[k]]) }, { id: 'unit', type: 'chips', label: 'وحدة القطعة', value: 'كرة', options: UNITS.map(u => [u, u]) },
+    { id: 'price', type: 'number', label: 'سعر الباقة (ر.س)', req: 1, ph: '40' }, { id: 'ship', type: 'number', label: 'رسوم التوصيل أو أي إضافات (ر.س)', ph: '0' }, { id: 'from', type: 'seg', label: 'من دفع؟', value: 'savings', options: PAYERS }].map(fld).join('')}
+  <div class="fsec">كم قطعة من كل لون؟</div>${rows}<div class="row pkc"><i class="sw big" style="background:transparent"></i><b class="grow">بدون لون محدد</b><div class="stp2"><button type="button" onclick="pkStep('pk_c_none',-1)">${ic('minus')}</button><input id="pk_c_none" inputmode="numeric" value="0" oninput="pkSum()"><button type="button" onclick="pkStep('pk_c_none',1)">${ic('plus')}</button></div></div>
+  <div class="card" id="pk_sum" style="margin:12px 0"></div><div class="err" id="pk_err"></div><div class="row"><button class="btn grow" id="pk_ok" onclick="packSave()">تسجيل الباقة</button><button class="btn soft" onclick="closeM()">إلغاء</button></div>`);
+  ['mf_price', 'mf_ship'].forEach(i => $('#' + i).addEventListener('input', pkSum)); pkSum();
+}
+function pkStep(id, d) { const i = $('#' + id); i.value = Math.max(0, (parseInt(i.value) || 0) + d); pkSum(); }
+function pkLines() { const L = []; COLORS.forEach(([n, h], i) => { const q = parseInt($('#pk_c' + i).value) || 0; if (q > 0) L.push({ n, h, q }); }); const q0 = parseInt($('#pk_c_none').value) || 0; if (q0 > 0) L.push({ n: '', h: '', q: q0 }); return L; }
+function pkSum() {
+  const L = pkLines(), t = L.reduce((x, l) => x + l.q, 0), price = Number($('#mf_price').value) || 0, ship = Number($('#mf_ship').value) || 0, tot = price + ship, el = $('#pk_sum'); if (!el) return;
+  el.innerHTML = t ? `<div class="row"><span class="grow">عدد القطع</span><b>${t}</b></div><div class="row"><span class="grow">التكلفة الكلية (الباقة + الإضافات)</span><b>${money(tot)}</b></div><div class="row"><span class="grow">تكلفة القطعة الواحدة</span><b style="color:var(--mv)">${money(tot / t)}</b></div>${L.length > 1 ? `<div class="sub" style="margin-top:6px">${L.map(l => esc(l.n || 'بدون لون') + ': ' + l.q + ' = ' + money(tot / t * l.q)).join(' · ')}</div>` : ''}` : '<div class="sub">حدّدي عدد القطع لكل لون لنحسب تكلفة القطعة.</div>';
+}
+async function packSave() {
+  const g = id => $('#mf_' + id).value.trim(), er = $('#pk_err'), name = g('name'), cat = g('cat'), unit = g('unit'), from = g('from'), price = Number(g('price')), ship = Number(g('ship')) || 0, L = pkLines(), t = L.reduce((x, l) => x + l.q, 0);
+  if (!name) return er.textContent = 'اكتبي اسم الخامة'; if (g('price') === '' || isNaN(price) || price < 0) return er.textContent = 'اكتبي سعر الباقة'; if (!t) return er.textContent = 'حدّدي عدد القطع لكل لون';
+  const tot = Math.round((price + ship) * 100) / 100, costs = L.map(l => Math.round(tot / t * l.q * 100) / 100), diff = Math.round((tot - costs.reduce((x, c) => x + c, 0)) * 100) / 100; costs[costs.length - 1] = Math.round((costs[costs.length - 1] + diff) * 100) / 100;
+  const ok = $('#pk_ok'); ok.disabled = true; ok.textContent = 'جارٍ التسجيل...'; er.textContent = '';
+  try {
+    for (let k = 0; k < L.length; k++) {
+      const l = L[k], nm = name + (l.n ? ' - ' + l.n : ''); let it = Object.values(invCache).find(i => i.name === nm && i.category === cat), id = it && it.id;
+      if (!id) { const r = await sb.from('inventory_items').insert({ name: nm, category: cat, unit, min_quantity: 1, color: l.h || null }).select('id').single(); if (r.error) throw r.error; id = r.data.id; }
+      const r2 = await sb.rpc('record_purchase', { p_item: id, p_qty: l.q, p_total_cost: costs[k], p_paid_from: from, p_note: `باقة ${name}: ${price} ر.س${ship ? ' + إضافات ' + ship : ''}` }); if (r2.error) throw r2.error;
+    }
+  } catch (e) { ok.disabled = false; ok.textContent = 'تسجيل الباقة'; return er.textContent = e.message || 'تعذّر التسجيل'; }
+  closeM(); toast('سُجّلت الباقة: ' + t + ' قطعة بتكلفة ' + money(tot / t) + ' للقطعة', true); render();
+}
+function changePayer(id, cur) {
+  form({ title: 'تعديل من دفع', sub: 'ينقل هذا القيد إلى الحساب الذي دفع فعلًا، وتتعدّل الأرصدة تلقائيًا.', ok: 'حفظ', done: 'تم التعديل', fields: [{ id: 'a', type: 'seg', label: 'من دفع؟', value: cur, options: PAYERS }],
+    onSubmit: async v => { const { error } = await sb.from('finance_entries').update({ account: v.a }).eq('id', id); if (error) return error.message; } });
+}
+
+/* ---------- تقدير المتبقي من الكرة ---------- */
+const BALLS = [[0, 'فاضية تقريبًا'], [.25, 'ربع'], [.5, 'نصف'], [.75, 'ثلاثة أرباع'], [1, 'ممتلئة']];
+const ballSvg = (f, h) => `<svg viewBox="0 0 64 64" width="60" height="60" aria-hidden="true"><defs><clipPath id="bc${Math.round(f * 100)}"><rect x="0" y="${64 - 64 * f}" width="64" height="${64 * f + .5}"/></clipPath></defs><circle cx="32" cy="32" r="28" fill="${h || 'var(--mv)'}" clip-path="url(#bc${Math.round(f * 100)})" opacity=".85"/><circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M11 25c14 6 28 6 42 0M9 35c16 8 30 8 46 0M13 46c12 5 26 5 38 0" stroke="currentColor" stroke-width="1.5" fill="none" opacity=".4"/></svg>`;
+let leftQ = [];
+function leftoverDlg(id) {
+  const i = invCache[id]; if (!i) return;
+  openM(`<div class="mh"><h3>كم بقي من الكرة المفتوحة؟</h3><button class="ibtn" onclick="leftQ=[];closeM()" aria-label="إغلاق">${ic('x')}</button></div><div class="sub"><b>${i.color ? `<i class="sw" style="background:${esc(i.color)}"></i> ` : ''}${esc(i.name)}</b> · الكمية الحالية ${Number(i.quantity)} ${esc(i.unit)}</div>
+  <div class="sub" style="margin-top:6px">اختاري الشكل الأقرب لما بقي من الكرة التي استخدمتِها، وتُحسب الكمية تلقائيًا.</div>
+  <div class="balls">${BALLS.map(([f, l]) => `<button type="button" class="ball" onclick="leftSet('${id}',${f})">${ballSvg(f, i.color)}<span>${l}</span></button>`).join('')}</div><button class="btn soft" onclick="leftNext('${id}')">تخطّي</button>`);
+}
+async function leftSet(id, f) {
+  const i = invCache[id], q = Number(i.quantity), nq = Math.max(0, Math.ceil(q - 1e-9) - 1 + f), d = Math.round((nq - q) * 1000) / 1000;
+  if (Math.abs(d) >= .0005) { const { error } = await sb.from('inventory_movements').insert({ item_id: id, delta: d, reason: 'adjustment', note: 'تقدير المتبقي من الكرة', created_by: me.id }); if (error) return toast(error.message); }
+  toast('تم تحديث الكمية إلى ' + nq, true); leftNext(id);
+}
+function leftNext(id) { leftQ = leftQ.filter(x => x !== id); if (leftQ.length) leftoverDlg(leftQ[0]); else { closeM(); render(); } }
+async function leftoverForOrder(id) {
+  const o = await sb.from('orders').select('status').eq('id', id).single(); if (!o.data || o.data.status !== 'completed') return;
+  const oi = await sb.from('order_items').select('product_id').eq('order_id', id), pids = [...new Set((oi.data || []).map(x => x.product_id).filter(Boolean))]; if (!pids.length) return;
+  const pm = await sb.from('product_materials').select('item_id').in('product_id', pids), ids = [...new Set((pm.data || []).map(x => x.item_id))]; if (!ids.length) return;
+  const its = await sb.from('inventory_items').select('*').in('id', ids).eq('category', 'yarn').is('deleted_at', null); if (!(its.data || []).length) return;
+  its.data.forEach(i => invCache[i.id] = i); leftQ = its.data.map(i => i.id); leftoverDlg(leftQ[0]);
+}
+
+/* ---------- السجل والمحذوفات ---------- */
+const TRASH = [
+  ['orders', 'طلب', 'clipboard-list', r => (r.order_no || '') + ' · ' + (r.customer_name || '')], ['products', 'منتج', 'shopping-bag', r => r.name], ['inventory_items', 'مادة مخزون', 'boxes', r => r.name],
+  ['notes', 'ملاحظة', 'sticky-note', r => String(r.body || '').slice(0, 70)], ['reviews', 'تقييم المتجر', 'star', r => (r.rating || '') + ' نجوم · ' + String(r.comment || '').slice(0, 50)], ['product_reviews', 'تقييم منتج', 'star', r => (r.rating || '') + ' نجوم · ' + String(r.comment || '').slice(0, 50)],
+  ['offers', 'عرض', 'tag', r => r.title], ['pickup_locations', 'موقع استلام', 'map-pin', r => r.name], ['calendar_events', 'موعد', 'calendar', r => r.title]
+];
+let trTab = 'trash';
+const fmtB = n => { n = Number(n) || 0; return n > 1073741824 ? (n / 1073741824).toFixed(2) + ' GB' : n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.round(n / 1024) + ' KB'; };
+let trCache = [];
+async function trRestore(k) { const x = trCache[k]; const { error } = await sb.from(x.t).update({ deleted_at: null }).eq('id', x.id); if (error) return toast(error.message); toast('تم الاسترجاع', true); render(); }
+async function trKill(x) { return x.t === 'orders' ? sb.rpc('delete_order_permanently', { p_order: x.id }) : sb.from(x.t).delete().eq('id', x.id); }
+async function trPurge(k) { const x = trCache[k]; if (!await ask('حذف نهائي؟ لا يمكن استرجاعه بعد ذلك.')) return; const { error } = await trKill(x); if (error) return toast(error.message.includes('foreign key') ? 'لا يمكن حذفه نهائيًا لأنه مرتبط ببيانات أخرى. اتركيه في المحذوفات.' : error.message); toast('تم الحذف نهائيًا', true); render(); }
+async function trEmpty() { if (!await ask('تفريغ كل المحذوفات نهائيًا؟ لا يمكن التراجع.')) return; let bad = 0; for (const x of trCache) { const { error } = await trKill(x); if (error) bad++; } toast(bad ? `تم الحذف، وتعذّر حذف ${bad} لارتباطها ببيانات أخرى` : 'تم تفريغ المحذوفات', !bad); render(); }
+
+/* ---------- عدادات الموقع ---------- */
+async function cntSave() { const { error } = await sb.from('settings').upsert({ id: 'shop_counters', value: { visits: $('#cn_v').checked, orders: $('#cn_o').checked } }); if (error) return toast(error.message); toast('تم الحفظ', true); }
+function visitsStart() {
+  form({ title: 'ضبط رقم الزوار', sub: 'مفيد لو تريدين بدء العداد من رقم معين، أو تصفيره.', ok: 'حفظ', done: 'تم ضبط العداد', fields: [{ id: 'n', type: 'number', label: 'عدد الزوار', req: 1, value: '0' }],
+    onSubmit: async v => { const { error } = await sb.rpc('admin_set_visits', { p_total: Math.max(0, Math.floor(Number(v.n) || 0)) }); if (error) return error.message; } });
+}
+
 async function loadCats() { const { data, error } = await sb.from('product_categories').select('*').order('sort_order').order('created_at'); catOK = !error; catCache = data || []; const h = await sb.from('settings').select('value').eq('id', 'home_category').maybeSingle(); homeCat = (h.data && h.data.value) || ''; }
 const catList = () => catCache.map(c => `<div class="row" style="padding:8px 0;border-top:1px dashed var(--mv-l)"><b class="grow">${esc(c.name)}${homeCat === c.id ? ' <span class="tag s-ready">القسم الرئيسي</span>' : ''}</b><button class="btn ${homeCat === c.id ? '' : 'soft'} sm" onclick="catHome('${c.id}')" title="يظهر أولًا لدى العميل" aria-label="جعله القسم الرئيسي">${ic('star')}</button><button class="btn soft sm" onclick="catRename('${c.id}')" aria-label="تعديل">${ic('pencil')}</button><button class="btn del sm" onclick="catDel('${c.id}')" aria-label="حذف">${ic('trash-2')}</button></div>`).join('') || '<div class="sub" style="margin:10px 0">لا توجد أقسام بعد.</div>';
 const CATI = { yarn:'disc-3', bands:'link', packaging:'package', tools:'scissors', other:'box' };
@@ -303,13 +392,25 @@ function fld(f) {
   const id = 'mf_' + f.id, v = f.value ?? '', lab = `<label for="${id}">${f.label}${f.req ? '<b class="rq"> *</b>' : ''}</label>`, hint = f.hint ? `<div class="hint">${f.hint}</div>` : '';
   let inp;
   if (f.type === 'chips' || f.type === 'seg') inp = `<input type="hidden" id="${id}" value="${esc(v)}"><div class="chips ${f.type}">${f.options.map(([o, l, i]) => `<button type="button" class="${String(o) === String(v) ? 'on' : ''}" onclick="pickChip('${id}',this,'${esc(o)}')">${i ? ic(i) : ''}${esc(l)}</button>`).join('')}</div>`;
-  else if (f.type === 'swatch') inp = `<input type="hidden" id="${id}" value="${esc(v)}"><div class="sws">${COLORS.map(([n, h]) => `<button type="button" class="sw2 ${v === h ? 'on' : ''}" title="${n}" style="background:${h}" onclick="pickChip('${id}',this,'${h}')"></button>`).join('')}<label class="sw2 cust" title="لون مخصص">${ic('palette')}<input type="color" value="${v || '#cccccc'}" oninput="pickChip('${id}',this.parentNode,this.value)"></label><button type="button" class="chipx" onclick="pickChip('${id}',null,'')">بدون لون</button></div>`;
+  else if (f.type === 'swatch') inp = `<input type="hidden" id="${id}" value="${esc(v)}"><div class="sws">${COLORS.map(([n, h]) => `<button type="button" class="sw2 ${v === h ? 'on' : ''}" title="${n}" style="background:${h}" onclick="pickChip('${id}',this,'${h}')"></button>`).join('')}<label class="sw2 cust" title="لون مخصص">${ic('palette')}<input type="color" value="${v || '#cccccc'}" oninput="pickChip('${id}',this.parentNode,this.value)"></label><button type="button" class="chipx" onclick="pickChip('${id}',null,'')">بدون لون</button></div><button type="button" class="btn soft sm" style="margin-top:6px" onclick="colorManager()">${ic('palette')} إدارة قائمة الألوان</button>`;
   else if (f.type === 'stepper') inp = `<div class="stp2"><button type="button" onclick="stepIn('${id}',-1)">${ic('minus')}</button><input id="${id}" inputmode="decimal" value="${esc(v)}" placeholder="0"><button type="button" onclick="stepIn('${id}',1)">${ic('plus')}</button></div>`;
   else if (f.type === 'select') inp = `<select id="${id}">${f.options.map(([o, l]) => `<option value="${esc(o)}" ${String(o) === String(v) ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
   else if (f.type === 'textarea') inp = `<textarea id="${id}" rows="3" placeholder="${esc(f.ph || '')}">${esc(v)}</textarea>`;
   else inp = `<input id="${id}" type="${f.type === 'number' ? 'text' : f.type || 'text'}" ${f.type === 'number' ? 'inputmode="decimal"' : ''} value="${esc(v)}" placeholder="${esc(f.ph || '')}">`;
   return `<div class="fg">${lab}${inp}${hint}</div>`;
 }
+async function loadColors() { const { data, error } = await sb.from('yarn_colors').select('*').order('sort_order').order('created_at'); YC = error ? [] : (data || []); if (YC.length) COLORS = YC.map(c => [c.name, c.hex]); }
+const colorRows = () => YC.map(c => `<div class="row pkc"><i class="sw big" style="background:${esc(c.hex)}"></i><b class="grow">${esc(c.name)}</b><button class="btn del sm" onclick="colorDel('${c.id}')" aria-label="حذف اللون">${ic('trash-2')}</button></div>`).join('') || '<div class="sub" style="margin:10px 0">لا توجد ألوان بعد.</div>';
+function colorManager() {
+  openM(`<div class="mh"><h3>ألوان الخيوط</h3><button class="ibtn" onclick="closeM()" aria-label="إغلاق">${ic('x')}</button></div><div class="sub">قائمة ثابتة تظهر عند إضافة مادة أو شراء باقة. أضيفي لونًا جديدًا مرة واحدة واحذفي ما لا تحتاجينه.</div><div id="cm_l">${colorRows()}</div>
+  <div class="row" style="margin-top:12px"><input type="color" id="cm_h" value="#c0a0c0" style="width:52px;height:44px;padding:2px"><input id="cm_n" class="grow" placeholder="اسم اللون (مثال: توتي)"><button class="btn" onclick="colorAdd()">${ic('plus')} إضافة</button></div>`);
+}
+async function colorAdd() {
+  const n = $('#cm_n').value.trim(), h = $('#cm_h').value; if (!n) return toast('اكتبي اسم اللون');
+  const { error } = await sb.from('yarn_colors').insert({ name: n, hex: h, sort_order: YC.length + 1 }); if (error) return toast(error.message);
+  await loadColors(); $('#cm_l').innerHTML = colorRows(); $('#cm_n').value = ''; toast('أضيف اللون', true);
+}
+async function colorDel(id) { if (!await ask('حذف هذا اللون من القائمة؟ المواد التي تستخدمه تحتفظ بلونها.')) return; const { error } = await sb.from('yarn_colors').delete().eq('id', id); if (error) return toast(error.message); await loadColors(); colorManager(); }
 function pickChip(id, el, val) { const h = $('#' + id); h.value = val; const w = el ? el.closest('.chips,.sws') : h.nextElementSibling; w.querySelectorAll('button,label.sw2').forEach(b => b.classList.remove('on')); if (el) el.classList.add('on'); }
 function stepIn(id, d) { const i = $('#' + id); i.value = Math.max(0, (Number(i.value) || 0) + d); }
 
@@ -363,7 +464,7 @@ async function boot() {
   app.innerHTML = `<aside class="side" id="side"></aside><div class="backdrop" id="bd" onclick="toggleSide(false)"></div>
   <div class="content"><header class="top"><button class="ibtn menu-btn" onclick="toggleSide(true)" aria-label="القائمة">${ic('menu')}</button><h1 id="ptitle"></h1><span class="grow"></span><button class="ibtn" id="bell" onclick="go('notifs')" aria-label="التنبيهات"></button><span class="chip">${ic('user')} ${esc(me.name)}</span><button class="ibtn" onclick="signOut()" aria-label="خروج">${ic('log-out')}</button></header><main class="wrap" id="main"></main></div><div class="tabbar" id="nav"></div>`;
   sb.rpc('generate_due_alerts');
-  await countUnread(); realtime(); window.__ok = true; go('home');
+  await loadColors(); await countUnread(); realtime(); window.__ok = true; go('home');
 }
 async function countUnread() {
   const { count } = await sb.from('notifications').select('id', { count: 'exact', head: true }).is('read_at', null);
@@ -372,7 +473,7 @@ async function countUnread() {
 function drawNav() {
   const cur = GRP[view] ?? view;
   $('#side').innerHTML = `<div class="sb-h">${logo()}<b class="brand">مساحة بيتالي</b></div>` + NAV.map(([t, items]) => `${t ? `<div class="gt">${t}</div>` : ''}${items.map(([k, i, l]) => `<button class="si ${cur === k ? 'on' : ''}" onclick="go('${k}')">${ic(i)}<span>${l}</span></button>`).join('')}`).join('');
-  const tabs = [['home', 'home', 'الرئيسية'], ['orders', 'clipboard-list', 'الطلبات'], ['catalog', 'shopping-bag', 'المنتجات'], ['money', 'wallet', 'المالية']];
+  const tabs = [['home', 'home', 'الرئيسية'], ['orders', 'clipboard-list', 'الطلبات'], ['products', 'shopping-bag', 'المنتجات'], ['inventory', 'boxes', 'المخزون']];
   $('#nav').innerHTML = tabs.map(([k, i, l]) => `<button class="${cur === k ? 'on' : ''}" onclick="go('${k}')">${ic(i)}<span>${l}</span></button>`).join('') + `<button onclick="toggleSide(true)">${ic('menu')}<span>القائمة</span></button>`;
   const b = $('#bell'); if (b) b.innerHTML = ic('bell') + (unread ? `<b class="badge">${unread}</b>` : '');
   const t = $('#ptitle'); if (t) t.textContent = TITLES[view] || '';
@@ -383,14 +484,14 @@ async function render() {
   const m = $('#main'); if (!m) return;
   try { m.innerHTML = await V[view](arg); if (post) { const f = post; post = null; f(); } } catch (e) { m.innerHTML = `<div class="card">تعذّر تحميل الصفحة: ${esc(e.message)}</div>`; }
   if (view === 'home') m.insertAdjacentHTML('beforeend', `<img class="stamp" src="${CFG.logo}" alt="" onerror="this.remove()">`);
-  if (view === 'org' && HT.org === 'chat') { const b = $('#msgs'); if (b) b.scrollTop = b.scrollHeight; }
+  if (view === 'chat') { const b = $('#msgs'); if (b) b.scrollTop = b.scrollHeight; }
   icons();
 }
 function realtime() {
-  const soft = () => { clearTimeout(timer); timer = setTimeout(() => ['home','orders','order','catalog'].includes(view) && !document.activeElement?.matches('input,textarea,select') && render(), 500); };
+  const soft = () => { clearTimeout(timer); timer = setTimeout(() => ['home','orders','order','inventory','products'].includes(view) && !document.activeElement?.matches('input,textarea,select') && render(), 500); };
   const ch = sb.channel('petali');
   ['orders','order_item_progress','order_events','inventory_items'].forEach(t => ch.on('postgres_changes', { event:'*', schema:'public', table:t }, soft));
-  ch.on('postgres_changes', { event:'INSERT', schema:'public', table:'messages' }, () => view === 'org' && HT.org === 'chat' && render());
+  ch.on('postgres_changes', { event:'INSERT', schema:'public', table:'messages' }, () => view === 'chat' && render());
   ch.on('postgres_changes', { event:'INSERT', schema:'public', table:'notifications', filter:`recipient_id=eq.${me.id}` }, p => { unread++; drawNav(); toast(p.new.title); if (view === 'notifs') render(); });
   ch.subscribe();
 }
@@ -454,13 +555,13 @@ const V = {
     invCache = Object.fromEntries((data || []).map(i => [i.id, i]));
     const all = data || [], isLow = i => Number(i.quantity) <= Number(i.min_quantity), nLow = all.filter(isLow).length;
     const rows = all.filter(i => (!invF.q || i.name.includes(invF.q)) && (!invF.low || isLow(i)));
-    return `<div class="ph"><div><h2>المخزون</h2><div class="sub">${all.length} مادة${nLow ? ' · ' + nLow + ' تحتاج شراء' : ''}</div></div><button class="btn" onclick="addItem()">${ic('plus')} مادة جديدة</button></div>
+    return `<div class="ph"><div><h2>المخزون</h2><div class="sub">${all.length} مادة${nLow ? ' · ' + nLow + ' تحتاج شراء' : ''}</div></div><div class="row"><button class="btn soft" onclick="colorManager()">${ic('palette')} الألوان</button><button class="btn soft" onclick="packBuy()">${ic('package')} شراء باقة</button><button class="btn" onclick="addItem()">${ic('plus')} مادة جديدة</button></div></div>
     <div class="row" style="margin-bottom:12px"><div class="srch grow">${ic('search')}<input placeholder="ابحثي عن مادة" value="${esc(invF.q)}" oninput="invF.q=this.value;clearTimeout(timer);timer=setTimeout(()=>render().then(()=>{const i=document.querySelector('.srch input');i.focus();i.setSelectionRange(99,99)}),300)"></div>
     <button class="btn soft ${invF.low ? 'on' : ''}" onclick="invF.low=!invF.low;render()">${ic('alert-triangle')} الناقصة فقط</button></div>
     ${rows.map(i => { const low = isLow(i), w = Number(i.min_quantity) > 0 ? Math.min(100, Math.round(100 * Number(i.quantity) / (Number(i.min_quantity) * 3))) : 100;
       return `<div class="card"><div class="row"><span class="ibox">${ic(CATI[i.category] || 'box')}</span><div class="grow"><b>${i.color ? `<i class="sw" style="background:${esc(i.color)}"></i> ` : ''}${esc(i.name)}</b><div class="sub">${CAT[i.category] || ''} · التكلفة ${Number(i.unit_cost).toFixed(2)} ر.س للوحدة${i.purchased_at ? ' · آخر شراء ' + i.purchased_at : ''}</div></div><div class="qn ${low ? 'low' : ''}">${Number(i.quantity)} <span class="sub">${esc(i.unit)}</span></div></div>
       <div class="bar" style="margin:10px 0 4px"><i style="width:${w}%;${low ? 'background:var(--warn)' : ''}"></i></div><div class="sub">حد التنبيه ${Number(i.min_quantity)} ${esc(i.unit)}</div>
-      <div class="row" style="margin-top:10px"><button class="btn sm" onclick="buyItem('${i.id}')">${ic('shopping-cart')} تسجيل شراء</button><button class="btn soft sm" onclick="adjust('${i.id}')">${ic('sliders-horizontal')} تعديل الكمية</button><button class="btn soft sm" onclick="editItem('${i.id}')">${ic('pencil')} تعديل</button><button class="btn del sm" onclick="delItem('${i.id}')" aria-label="حذف">${ic('trash-2')}</button></div></div>`; }).join('') || '<div class="card sub empty">لا توجد مواد مطابقة.</div>'}`;
+      <div class="row" style="margin-top:10px"><button class="btn sm" onclick="buyItem('${i.id}')">${ic('shopping-cart')} تسجيل شراء</button><button class="btn soft sm" onclick="adjust('${i.id}')">${ic('sliders-horizontal')} تعديل الكمية</button>${i.category === 'yarn' ? `<button class="btn soft sm" onclick="leftoverDlg('${i.id}')">${ic('disc-3')} كم بقي من الكرة؟</button>` : ''}<button class="btn soft sm" onclick="editItem('${i.id}')">${ic('pencil')} تعديل</button><button class="btn del sm" onclick="delItem('${i.id}')" aria-label="حذف">${ic('trash-2')}</button></div></div>`; }).join('') || '<div class="card sub empty">لا توجد مواد مطابقة.</div>'}`;
   },
 
   async products() {
@@ -532,22 +633,22 @@ const V = {
     const B = Object.fromEntries((b.data || []).map(r => [r.account, r.balance]));
     return `<h2>المالية</h2><div class="grid"><div class="card dash"><h3>${ic('wallet')} صندوق ومدخرات بيتالي</h3><b style="font-size:1.5rem;color:var(--mv)">${money(B.savings)}</b></div><div class="card"><h3>أرباح راما</h3><b style="font-size:1.5rem">${money(B.rama)}</b></div><div class="card"><h3>أرباح مريم</h3><b style="font-size:1.5rem">${money(B.maryam)}</b></div></div>
     <div class="card dash"><h3>تسجيل عملية</h3><div class="grid"><select id="fe_t">${Object.entries(FT).filter(([k]) => ['income','expense','savings_transfer','withdrawal','adjustment'].includes(k)).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
-    <select id="fe_a"><option value="savings">المدخرات</option><option value="rama">راما</option><option value="maryam">مريم</option></select><input id="fe_m" type="number" step="any" placeholder="المبلغ"><input id="fe_n" placeholder="وصف أو ملاحظة"></div>
+    <select id="fe_a"><option value="savings">بيتالي (المدخرات)</option><option value="rama">راما</option><option value="maryam">مريم</option></select><input id="fe_m" type="number" step="any" placeholder="المبلغ"><input id="fe_n" placeholder="وصف أو ملاحظة"></div>
     <button class="btn" style="margin-top:10px" onclick="addEntry()">تسجيل</button><div class="sub" style="margin-top:6px">التحويل للمدخرات يخصم من الحساب المختار ويضيف للمدخرات. التعديل يقبل رقمًا سالبًا.</div></div>
     <h2>السجل المالي</h2>${(l.data || []).map(e => `<div class="card" style="${e.voided_at ? 'opacity:.5' : ''}"><div class="row"><b class="grow">${FT[e.type] || e.type} · ${AC[e.account] || e.account}</b><b class="${e.amount < 0 ? 'low' : ''}" style="${e.voided_at ? 'text-decoration:line-through' : ''}">${money(e.amount)}</b></div>
-    <div class="sub">${e.entry_date} · ${esc(e.note || '')}${e.voided_at ? ' · ملغاة' : ''}</div><button class="btn soft sm" style="margin-top:6px" onclick="voidEntry('${e.id}',${!e.voided_at})">${e.voided_at ? 'استرجاع القيد' : 'إلغاء القيد'}</button></div>`).join('') || '<div class="card sub empty">لا توجد عمليات بعد.</div>'}`;
+    <div class="sub">${e.entry_date} · ${esc(e.note || '')}${e.voided_at ? ' · ملغاة' : ''}</div><div class="row" style="margin-top:6px"><button class="btn soft sm" onclick="voidEntry('${e.id}',${!e.voided_at})">${e.voided_at ? 'استرجاع القيد' : 'إلغاء القيد'}</button>${['material_purchase', 'expense'].includes(e.type) && !e.voided_at ? `<button class="btn soft sm" onclick="changePayer('${e.id}','${e.account}')">${ic('pencil')} تعديل من دفع</button>` : ''}</div></div>`).join('') || '<div class="card sub empty">لا توجد عمليات بعد.</div>'}`;
   },
 
   async locations() {
-    const { data } = await sb.from('pickup_locations').select('*').order('sort_order');
+    const { data } = await sb.from('pickup_locations').select('*').is('deleted_at', null).order('sort_order');
     locMap = Object.fromEntries((data || []).map(x => [x.id, x]));
     return `<h2>مواقع الاستلام</h2><div class="card dash"><div class="grid"><input id="lc_n" placeholder="اسم الموقع"><input id="lc_i" placeholder="وصف أو تعليمات"></div><button class="btn" style="margin-top:10px" onclick="addLoc()">إضافة موقع</button></div>
     ${(data || []).map(x => `<div class="card"><div class="row"><b class="grow">${esc(x.name)}</b><span class="tag ${x.is_available ? 's-ready' : ''}">${x.is_available ? 'متاح' : 'غير متاح'}</span></div><div class="sub">${esc(x.address || '')}</div><div class="sub">${esc(x.instructions || '')}</div>
-    <div class="row" style="margin-top:8px"><button class="btn soft sm" onclick="upLoc('${x.id}',{is_available:${!x.is_available}})">${x.is_available ? 'إيقاف' : 'تفعيل'}</button><button class="btn soft sm" onclick="editLoc('${x.id}')">تعديل</button><button class="btn del sm" onclick="delLoc('${x.id}')">حذف</button></div></div>`).join('')}`;
+    <div class="row" style="margin-top:8px"><button class="btn soft sm" onclick="upLoc('${x.id}',{is_available:${!x.is_available}})">${x.is_available ? 'إيقاف' : 'تفعيل'}</button><button class="btn soft sm" onclick="editLoc('${x.id}')">تعديل</button><button class="btn del sm" onclick="delLoc('${x.id}')" aria-label="حذف">${ic('trash-2')} حذف</button></div></div>`).join('')}`;
   },
 
   async offers() {
-    const [o, p] = await Promise.all([sb.from('offers').select('*').order('created_at', { ascending: false }), sb.from('products').select('id,name').is('deleted_at', null)]);
+    const [o, p] = await Promise.all([sb.from('offers').select('*').is('deleted_at', null).order('created_at', { ascending: false }), sb.from('products').select('id,name').is('deleted_at', null)]);
     const pn = Object.fromEntries((p.data || []).map(x => [x.id, x.name])), po = (all) => `${all ? '<option value="">كل المنتجات / الطلب كاملًا</option>' : ''}${(p.data || []).map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('')}`;
     return `<h2>العروض والخصومات</h2><div class="card dash"><h3>عرض جديد</h3><div class="grid"><input id="of_t" placeholder="اسم العرض">
     <select id="of_k"><option value="percent">خصم نسبة %</option><option value="fixed">خصم مبلغ ثابت</option><option value="gift">هدية مجانية</option></select><input id="of_v" type="number" step="any" placeholder="قيمة الخصم (نسبة أو مبلغ)">
@@ -555,14 +656,14 @@ const V = {
     <button class="btn" style="margin-top:10px" onclick="addOffer()">إضافة العرض</button></div>
     ${(o.data || []).map(x => `<div class="card"><div class="row"><b class="grow">${esc(x.title)}</b><span class="tag ${x.is_active ? 's-ready' : ''}">${x.is_active ? 'فعّال' : 'متوقف'}</span></div>
     <div class="sub">${x.kind === 'percent' ? x.value + '%' : x.kind === 'fixed' ? money(x.value) : 'هدية: ' + esc(pn[x.gift_product_id] || '') + ' ×' + x.gift_qty}${x.applies_to_product ? ' · على ' + esc(pn[x.applies_to_product] || '') : ''}${x.min_qty > 1 ? ' · من ' + x.min_qty + ' قطع' : ''}${x.min_order_total > 0 ? ' · عند ' + money(x.min_order_total) : ''}</div>
-    <div class="row" style="margin-top:8px"><button class="btn soft sm" onclick="upOffer('${x.id}',{is_active:${!x.is_active}})">${x.is_active ? 'إيقاف' : 'تفعيل'}</button><button class="btn del sm" onclick="delOffer('${x.id}')">حذف</button></div></div>`).join('') || '<div class="card sub empty">لا توجد عروض.</div>'}`;
+    <div class="row" style="margin-top:8px"><button class="btn soft sm" onclick="upOffer('${x.id}',{is_active:${!x.is_active}})">${x.is_active ? 'إيقاف' : 'تفعيل'}</button><button class="btn del sm" onclick="delOffer('${x.id}')" aria-label="حذف">${ic('trash-2')} حذف</button></div></div>`).join('') || '<div class="card sub empty">لا توجد عروض.</div>'}`;
   },
 
   async reviews() {
     const { data } = await sb.from('reviews').select('*, orders(order_no,customer_name)').is('deleted_at', null).order('created_at', { ascending: false });
     return `<h2>تقييمات العملاء</h2>${(data || []).map(r => `<div class="card" style="${r.is_visible ? '' : 'opacity:.6'}"><div class="row"><b class="grow">${esc(r.orders?.customer_name || '')} <span class="sub">${esc(r.orders?.order_no || '')}</span></b><span class="rs">${Array(r.rating).fill(ic('star')).join('')}</span></div>
     <div>${esc(r.comment || '')}</div><div class="sub">${ago(r.created_at)} · ${r.is_visible ? 'ظاهر للعملاء' : 'مخفي'}</div>
-    <div class="row" style="margin-top:8px"><button class="btn soft sm" onclick="upRev('${r.id}',{is_visible:${!r.is_visible}})">${r.is_visible ? 'إخفاء' : 'إظهار'}</button><button class="btn del sm" onclick="upRev('${r.id}',{deleted_at:new Date().toISOString()})">حذف</button></div></div>`).join('') || '<div class="card sub empty">لا توجد تقييمات بعد.</div>'}`;
+    <div class="row" style="margin-top:8px"><button class="btn soft sm" onclick="upRev('${r.id}',{is_visible:${!r.is_visible}})">${r.is_visible ? 'إخفاء' : 'إظهار'}</button><button class="btn del sm" onclick="upRev('${r.id}',{deleted_at:new Date().toISOString()})" aria-label="حذف">${ic('trash-2')} حذف</button></div></div>`).join('') || '<div class="card sub empty">لا توجد تقييمات بعد.</div>'}`;
   },
 
   async stats() {
@@ -611,12 +712,12 @@ const V = {
     ${showArch ? '' : `<div class="card dash"><textarea id="nt_b" rows="3" placeholder="اكتبي ملاحظة..."></textarea><div class="row" style="margin-top:10px"><select id="nt_c" style="width:auto"><option value="mauve">كريمي</option><option value="pink">خوخي</option><option value="peach">أخضر</option></select><button class="btn grow" onclick="addSticky()">إضافة</button></div></div>`}
     <div class="grid">${(data || []).map(n => `<div class="card" style="background:${NC[n.color] || NC.mauve};${n.pinned ? 'border:2px solid var(--mv)' : ''}"><div style="white-space:pre-wrap">${n.pinned ? ic('pin') + ' ' : ''}${esc(n.body)}</div>
     <div class="sub" style="margin-top:8px">${esc(staff[n.author_id]?.name || '')} · ${ago(n.created_at)} · ${new Date(n.created_at).toLocaleDateString('ar-u-ca-gregory-nu-latn')}</div>
-    <div class="row" style="margin-top:8px"><button class="btn soft sm" onclick="upNote('${n.id}',{pinned:${!n.pinned}})">${n.pinned ? 'إلغاء التثبيت' : 'تثبيت'}</button><button class="btn soft sm" onclick="upNote('${n.id}',{archived:${!n.archived}})">${n.archived ? 'استرجاع' : 'أرشفة'}</button><button class="btn del sm" onclick="delNote('${n.id}')">حذف</button></div></div>`).join('') || '<div class="card sub empty">لا توجد ملاحظات.</div>'}</div>`;
+    <div class="row" style="margin-top:8px"><button class="btn soft sm" onclick="upNote('${n.id}',{pinned:${!n.pinned}})">${n.pinned ? 'إلغاء التثبيت' : 'تثبيت'}</button><button class="btn soft sm" onclick="upNote('${n.id}',{archived:${!n.archived}})">${n.archived ? 'استرجاع' : 'أرشفة'}</button><button class="btn del sm" onclick="delNote('${n.id}')" aria-label="حذف">${ic('trash-2')} حذف</button></div></div>`).join('') || '<div class="card sub empty">لا توجد ملاحظات.</div>'}</div>`;
   },
 
   async calendar() {
     const { y, m } = cal, a = new Date(y, m, 1), b = new Date(y, m + 1, 1), f2 = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    const [e, o] = await Promise.all([sb.from('calendar_events').select('*').gte('starts_at', a.toISOString()).lt('starts_at', b.toISOString()).order('starts_at'),
+    const [e, o] = await Promise.all([sb.from('calendar_events').select('*').is('deleted_at', null).gte('starts_at', a.toISOString()).lt('starts_at', b.toISOString()).order('starts_at'),
       sb.from('orders').select('id,order_no,customer_name,due_date').is('deleted_at', null).not('status', 'in', '(completed,cancelled)').gte('due_date', f2(a)).lt('due_date', f2(b))]);
     const items = [...(e.data || []).map(x => ({ day: new Date(x.starts_at).getDate(), t: x.title, owner: x.owner, time: new Date(x.starts_at).toLocaleTimeString('ar-u-ca-gregory-nu-latn', { hour: '2-digit', minute: '2-digit' }), id: x.id, d: x.details })),
       ...(o.data || []).map(x => ({ day: Number(String(x.due_date || '').slice(8)), t: 'موعد طلب: ' + x.customer_name, order: x.id }))].sort((p, q) => p.day - q.day);
@@ -626,7 +727,7 @@ const V = {
     ${cells.map(d => d ? `<div onclick="cal.day='${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}T10:00';render()" style="padding:6px 0;border-radius:10px;cursor:pointer;background:${items.some(i => i.day === d) ? 'var(--pk)' : 'transparent'}">${d}<div style="display:flex;gap:2px;justify-content:center;min-height:6px">${items.filter(i => i.day === d).slice(0, 4).map(i => `<i style="width:6px;height:6px;border-radius:9px;background:${i.order ? '#9A8C96' : OC[i.owner]}"></i>`).join('')}</div></div>` : '<div></div>').join('')}</div>
     <div class="row sub" style="margin-top:8px">${Object.entries(ON).map(([k, v]) => `<span><i style="display:inline-block;width:8px;height:8px;border-radius:9px;background:${OC[k]}"></i> ${v}</span>`).join('')}<span><i style="display:inline-block;width:8px;height:8px;border-radius:9px;background:#9A8C96"></i> موعد طلب</span></div></div>
     <div class="card dash"><h3>موعد جديد</h3><div class="grid"><input id="ev_t" placeholder="العنوان"><input id="ev_d" type="datetime-local" value="${cal.day}"><select id="ev_o"><option value="shared">مشترك</option><option value="rama">راما</option><option value="maryam">مريم</option></select><input id="ev_n" placeholder="تفاصيل (اختياري)"></div><button class="btn" style="margin-top:10px" onclick="addEvent()">إضافة الموعد</button></div>
-    ${items.map(i => `<div class="card ${i.order ? 'click' : ''}" ${i.order ? `onclick="go('order','${i.order}')"` : ''}><div class="row"><b class="grow">${i.day} · ${esc(i.t)}</b>${i.order ? '' : `<span class="tag" style="background:${OC[i.owner]};color:#fff">${ON[i.owner]}</span>`}</div>${i.order ? '' : `<div class="sub">${i.time} ${esc(i.d || '')}</div><button class="btn del sm" style="margin-top:6px" onclick="delEvent('${i.id}')">حذف</button>`}</div>`).join('') || '<div class="card sub empty">لا مواعيد هذا الشهر.</div>'}`;
+    ${items.map(i => `<div class="card ${i.order ? 'click' : ''}" ${i.order ? `onclick="go('order','${i.order}')"` : ''}><div class="row"><b class="grow">${i.day} · ${esc(i.t)}</b>${i.order ? '' : `<span class="tag" style="background:${OC[i.owner]};color:#fff">${ON[i.owner]}</span>`}</div>${i.order ? '' : `<div class="sub">${i.time} ${esc(i.d || '')}</div><button class="btn del sm" style="margin-top:6px" onclick="delEvent('${i.id}')" aria-label="حذف">${ic('trash-2')} حذف</button>`}</div>`).join('') || '<div class="card sub empty">لا مواعيد هذا الشهر.</div>'}`;
   },
 
   export() {
@@ -675,11 +776,34 @@ V.look = async () => { const cur = thTarget === 'shop' ? shopTheme : theme; retu
   <label class="lb">حجم الخط</label><div class="chips seg">${[[15, 'صغير'], [16, 'عادي'], [18, 'كبير']].map(([v, l]) => `<button class="${cur.font === v ? 'on' : ''}" onclick="tSet('font',${v},true)">${l}</button>`).join('')}</div>
   <label class="lb">كثافة الواجهة</label><div class="chips seg"><button class="${!cur.dense ? 'on' : ''}" onclick="tSet('dense',false,true)">مريحة</button><button class="${cur.dense ? 'on' : ''}" onclick="tSet('dense',true,true)">مضغوطة</button></div></div>
   <button class="btn soft" style="margin-top:12px" onclick="tReset()">${ic('rotate-ccw')} إعادة المظهر الأصلي</button>`; };
+V.trash = async () => {
+  const tabs = `<div class="tabs">${[['trash', 'المحذوفات'], ['log', 'السجل الكامل'], ['space', 'مساحة التخزين']].map(([k, l]) => `<button class="${trTab === k ? 'on' : ''}" onclick="trTab='${k}';render()">${l}</button>`).join('')}</div>`;
+  if (trTab === 'log') return `<h2>السجل والمحذوفات</h2>${tabs}` + await V.undo();
+  if (trTab === 'space') {
+    const { data, error } = await sb.rpc('storage_usage'), U = data || {}, DB = 500 * 1048576, FL = 1073741824, bar = (v, m) => `<div class="bar thick" style="margin:8px 0 4px"><i style="width:${Math.min(100, Math.round(100 * v / m))}%;${v / m > .8 ? 'background:var(--warn)' : ''}"></i></div>`;
+    return `<h2>السجل والمحذوفات</h2>${tabs}${error ? `<div class="card sub">تعذّر قراءة المساحة. شغّلي ملف 09_admin_update.sql ثم جرّبي. (${esc(error.message)})</div>` : `<div class="grid"><div class="card"><h3>${ic('box')} قاعدة البيانات</h3><b style="font-size:1.4rem">${fmtB(U.db_bytes)}</b><span class="sub"> من ${fmtB(DB)}</span>${bar(U.db_bytes, DB)}<div class="sub">المتبقي ${fmtB(Math.max(0, DB - U.db_bytes))}</div></div>
+    <div class="card"><h3>${ic('image')} الملفات والصور</h3><b style="font-size:1.4rem">${fmtB(U.files_bytes)}</b><span class="sub"> من ${fmtB(FL)} · ${U.files_count || 0} ملف</span>${bar(U.files_bytes, FL)}<div class="sub">المتبقي ${fmtB(Math.max(0, FL - U.files_bytes))}</div></div></div>
+    <div class="sub">الحدود المعروضة هي حدود الخطة المجانية في Supabase (500 MB قاعدة بيانات، 1 GB ملفات). إن كانت خطتك مختلفة فالأرقام المتبقية تقريبية.</div>`}`;
+  }
+  const res = await Promise.all(TRASH.map(async ([t, l, i, f]) => { const r = await sb.from(t).select('*').not('deleted_at', 'is', null).order('deleted_at', { ascending: false }).limit(100); return r.error ? [] : (r.data || []).map(x => ({ t, l, i, name: f(x), at: x.deleted_at, id: x.id })); }));
+  const all = res.flat().sort((a, b) => new Date(b.at) - new Date(a.at)); trCache = all;
+  return `<div class="ph"><div><h2>السجل والمحذوفات</h2><div class="sub">كل ما حذفتِه من أي قسم يبقى هنا حتى تحذفينه نهائيًا.</div></div>${all.length ? `<button class="btn del sm" onclick="trEmpty()">${ic('trash-2')} تفريغ الكل</button>` : ''}</div>${tabs}
+  ${all.map((x, k) => `<div class="card"><div class="row"><span class="ibox">${ic(x.i)}</span><div class="grow"><b>${esc(x.name || '—')}</b><div class="sub"><span class="tag">${x.l}</span> · حُذف ${ago(x.at)}</div></div></div>
+  <div class="row" style="margin-top:8px"><button class="btn soft sm" onclick="trRestore(${k})">${ic('rotate-ccw')} استرجاع</button><button class="btn del sm" onclick="trPurge(${k})">${ic('trash-2')} حذف نهائي</button></div></div>`).join('') || '<div class="card sub empty">لا توجد محذوفات.</div>'}`;
+};
+V.counters = async () => {
+  const { data, error } = await sb.rpc('get_shop_counters'), C = data || {}, n = x => Number(x || 0).toLocaleString('en-US');
+  if (error) return `<h2>عدادات الموقع</h2><div class="card sub">شغّلي ملف 09_admin_update.sql أولًا. (${esc(error.message)})</div>`;
+  const box = (id, ic_, t, v, on, d) => `<div class="card"><h3>${ic(ic_)} ${t}</h3><b style="font-size:1.9rem;color:var(--mv)">${n(v)}</b><div class="sub">${d}</div><label class="row" style="margin-top:10px;gap:10px;cursor:pointer"><input type="checkbox" id="${id}" style="width:24px;height:24px" ${on ? 'checked' : ''} onchange="cntSave()"><span>إظهاره للعملاء في الموقع</span></label></div>`;
+  return `<h2>عدادات الموقع</h2><div class="sub" style="margin-bottom:10px">يظهر العدادان أسفل موقع العملاء. أخفي أيًّا منهما أو أظهريه من هنا.</div>
+  <div class="grid">${box('cn_v', 'users', 'عدد الزوار', C.visits, C.show_visits !== false, 'يزيد مع كل زيارة جديدة للموقع (مرة لكل جلسة).')}${box('cn_o', 'clipboard-list', 'عدد الطلبات', C.orders, C.show_orders !== false, 'كل الطلبات ما عدا المحذوفة.')}</div>
+  <button class="btn soft" onclick="visitsStart()">${ic('pencil')} ضبط رقم الزوار</button>`;
+};
 for (const h in HUBS) V[h] = async () => tabsBar(h) + await V[HT[h]]();
 
 /* ---------- الإجراءات ---------- */
 async function upd(id, patch) { const { error } = await sb.from('orders').update(patch).eq('id', id); if (error) return toast(error.message); render(); }
-async function setStatus(id, s) { if (s === 'cancelled' && !await ask('إلغاء الطلب؟')) return render(); if (s === 'completed' && !await ask('سيتم احتساب الأرباح وتوزيعها عند الاكتمال. متأكدة؟')) return render(); upd(id, { status: s }); }
+async function setStatus(id, s) { if (s === 'cancelled' && !await ask('إلغاء الطلب؟')) return render(); if (s === 'completed' && !await ask('سيتم احتساب الأرباح وتوزيعها عند الاكتمال. متأكدة؟')) return render(); await upd(id, { status: s }); if (s === 'completed') leftoverForOrder(id); }
 function addProg(itemId) {
   form({ title: 'تسجيل إنجاز', sub: 'سجّلي عدد القطع التي أنجزتيها الآن. يظهر للطرفين ويدخل في حساب الأرباح.', ok: 'تسجيل', done: 'تم تسجيل الإنجاز',
     fields: [{ id: 'q', label: 'عدد القطع المنجزة', type: 'number', req: 1, value: '1', hint: 'اكتبي رقمًا سالبًا (مثل -1) لتصحيح خطأ سابق.' }, { id: 'n', label: 'ملاحظة (اختياري)' }],
@@ -719,7 +843,7 @@ function addItem() {
       { type: 'sec', label: '2 · الاسم واللون' }, { id: 'name', label: 'اسم المادة', req: 1, ph: 'مثال: صوف قطني', hint: 'اسم يميّزها عند اختيارها في المنتجات.' }, { id: 'color', type: 'swatch', label: 'اللون (اختياري، مفيد للصوف والخيوط)' },
       { type: 'sec', label: '3 · الكمية' }, { id: 'unit', type: 'chips', label: 'وحدة القياس', value: 'كرة', options: UNITS.map(u => [u, u]) }, { id: 'qty', type: 'stepper', label: 'الكمية الموجودة الآن', value: '0' },
       { id: 'min', type: 'stepper', label: 'نبّهني عندما تصل الكمية إلى', value: '1', hint: 'يظهر تنبيه "مادة ناقصة" عند هذا العدد أو أقل.' },
-      { type: 'sec', label: '4 · التكلفة (اختياري)' }, { id: 'cost', type: 'number', label: 'كم دفعتِ على هذه الكمية؟ (ر.س)', ph: '0.00', hint: 'نحسب منها تكلفة الوحدة تلقائيًا.' }, { id: 'from', type: 'seg', label: 'من دفع؟', value: 'savings', options: [['savings', 'المدخرات'], ['rama', 'راما'], ['maryam', 'مريم']] }],
+      { type: 'sec', label: '4 · التكلفة (اختياري)' }, { id: 'cost', type: 'number', label: 'كم دفعتِ على هذه الكمية؟ (ر.س)', ph: '0.00', hint: 'نحسب منها تكلفة الوحدة تلقائيًا.' }, { id: 'from', type: 'seg', label: 'من دفع؟', value: 'savings', options: PAYERS }],
     onSubmit: async v => { const { data, error } = await sb.from('inventory_items').insert({ name: v.name, category: v.cat, unit: v.unit, min_quantity: Number(v.min) || 0, color: v.color || null }).select('id').single(); if (error) return error.message;
       if (Number(v.qty) > 0) { const r = await sb.rpc('record_purchase', { p_item: data.id, p_qty: Number(v.qty), p_total_cost: Number(v.cost) || 0, p_paid_from: v.from, p_note: 'الكمية الأولية' }); if (r.error) return 'أضيفت المادة لكن تعذّر تسجيل الكمية: ' + r.error.message; } } });
 }
@@ -727,7 +851,7 @@ function buyItem(id) {
   const i = invCache[id];
   form({ title: 'تسجيل شراء: ' + esc(i.name), sub: 'تزيد الكمية ويُحدَّث متوسط التكلفة ويُسجَّل المصروف في المالية.', ok: 'تسجيل الشراء', done: 'تم تسجيل الشراء',
     fields: [{ id: 'q', type: 'stepper', label: 'الكمية المشتراة (' + esc(i.unit) + ')', req: 1, value: '1' }, { id: 'c', type: 'number', label: 'إجمالي المبلغ المدفوع (ر.س)', req: 1, ph: '0.00' },
-      { id: 'f', type: 'seg', label: 'من دفع؟', value: 'savings', options: [['savings', 'المدخرات'], ['rama', 'راما'], ['maryam', 'مريم']] }, { id: 'n', label: 'ملاحظة (اختياري)', ph: 'مثال: من محل ...' }],
+      { id: 'f', type: 'seg', label: 'من دفع؟', value: 'savings', options: PAYERS }, { id: 'n', label: 'ملاحظة (اختياري)', ph: 'مثال: من محل ...' }],
     onSubmit: async v => { if (!(Number(v.q) > 0)) return 'الكمية يجب أن تكون أكبر من صفر'; const { error } = await sb.rpc('record_purchase', { p_item: id, p_qty: Number(v.q), p_total_cost: Number(v.c), p_paid_from: v.f, p_note: v.n || null }); if (error) return error.message; } });
 }
 function editItem(id) {
@@ -793,7 +917,7 @@ async function delProduct() {
   if (error) return toast(error.message); toast('تم الحذف'); go('products');
 }
 async function newOrder() {
-  const [p, l] = await Promise.all([sb.from('products').select('*').is('deleted_at', null).order('name'), sb.from('pickup_locations').select('*').order('sort_order')]);
+  const [p, l] = await Promise.all([sb.from('products').select('*').is('deleted_at', null).order('name'), sb.from('pickup_locations').select('*').is('deleted_at', null).order('sort_order')]);
   prodCache = p.data || []; locCache = l.data || [];
   if (!prodCache.length) return toast('أضيفي منتجًا أولًا');
   no = { name: '', phone: '', loc: locCache[0]?.id, executor: '', due: '', discount: '', notes: '', items: [newItem()] }; go('neworder');
@@ -833,14 +957,14 @@ function editLoc(id) {
   form({ title: 'تعديل موقع الاستلام', ok: 'حفظ', done: 'تم الحفظ', fields: [{ id: 'n', label: 'اسم الموقع', req: 1, value: x.name }, { id: 'a', label: 'العنوان', type: 'textarea', value: x.address || '', hint: 'يظهر للعميل عند الاختيار وفي الفاتورة.' }, { id: 'm', label: 'رابط خرائط جوجل', value: x.map_url || '', hint: 'افتحي الموقع في خرائط جوجل ثم شاركي الرابط والصقيه هنا.' }, { id: 'la', label: 'خط العرض (لخاصية الأقرب لك)', value: x.lat ?? '' }, { id: 'lo', label: 'خط الطول', value: x.lng ?? '' }, { id: 'i', label: 'تعليمات للعميل', type: 'textarea', value: x.instructions || '', hint: 'تظهر للعميل في الفاتورة.' }],
     onSubmit: async v => { const n = x => { const t = String(x ?? '').trim().replace(',', '.'); return t === '' || isNaN(+t) ? null : +t; }; const { error } = await sb.from('pickup_locations').update({ name: v.n, instructions: v.i || null, address: v.a || null, map_url: v.m || null, lat: n(v.la), lng: n(v.lo) }).eq('id', id); if (error) return error.message; } });
 }
-async function delLoc(id) { if (await ask('حذف الموقع؟ الطلبات القديمة تحتفظ باسمه.')) chk(sb.from('pickup_locations').delete().eq('id', id)); }
+async function delLoc(id) { if (await ask('نقل الموقع إلى المحذوفات؟ الطلبات القديمة تحتفظ باسمه.')) chk(sb.from('pickup_locations').update({ deleted_at: new Date().toISOString() }).eq('id', id)); }
 function addOffer() {
   const k = $('#of_k').value, t = $('#of_t').value.trim(); if (!t) return toast('اكتبي اسم العرض');
   if (k === 'gift' && !$('#of_g').value) return toast('اختاري منتج الهدية');
   chk(sb.from('offers').insert({ title: t, kind: k, value: Number($('#of_v').value) || 0, applies_to_product: $('#of_p').value || null, min_qty: Number($('#of_q').value) || 1, min_order_total: Number($('#of_m').value) || 0, gift_product_id: $('#of_g').value || null, gift_qty: Number($('#of_gq').value) || 1 }), 'تمت الإضافة');
 }
 function upOffer(id, patch) { chk(sb.from('offers').update(patch).eq('id', id)); }
-async function delOffer(id) { if (await ask('حذف العرض؟')) chk(sb.from('offers').delete().eq('id', id)); }
+async function delOffer(id) { if (await ask('نقل العرض إلى المحذوفات؟')) chk(sb.from('offers').update({ deleted_at: new Date().toISOString() }).eq('id', id)); }
 async function upRev(id, patch) { if (patch.deleted_at && !await ask('حذف التعليق؟')) return; chk(sb.from('reviews').update(patch).eq('id', id)); }
 function addSticky() { const t = $('#nt_b').value.trim(); if (!t) return toast('اكتبي الملاحظة'); chk(sb.from('notes').insert({ body: t, color: $('#nt_c').value, author_id: me.id })); }
 function upNote(id, patch) { chk(sb.from('notes').update(patch).eq('id', id)); }
@@ -850,7 +974,7 @@ function addEvent() {
   const t = $('#ev_t').value.trim(), d = $('#ev_d').value; if (!t || !d) return toast('اكتبي العنوان واختاري الوقت');
   chk(sb.from('calendar_events').insert({ title: t, starts_at: new Date(d).toISOString(), owner: $('#ev_o').value, details: $('#ev_n').value.trim() || null, created_by: me.id }), 'تمت الإضافة');
 }
-async function delEvent(id) { if (await ask('حذف الموعد؟')) chk(sb.from('calendar_events').delete().eq('id', id)); }
+async function delEvent(id) { if (await ask('نقل الموعد إلى المحذوفات؟')) chk(sb.from('calendar_events').update({ deleted_at: new Date().toISOString() }).eq('id', id)); }
 async function fetchAll(t) { let out = [], i = 0; for (;;) { const { data, error } = await sb.from(t).select('*').range(i, i + 999); if (error) throw error; out = out.concat(data); if (data.length < 1000) break; i += 1000; } return out; }
 function download(name, text, type) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
 const csv = rows => { const k = Object.keys(rows[0]), c = v => `"${String(v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : v).replace(/"/g, '""')}"`; return '\ufeff' + [k.join(','), ...rows.map(r => k.map(x => c(r[x])).join(','))].join('\n'); };
