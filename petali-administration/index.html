@@ -116,6 +116,9 @@ html,body{font-size:var(--fs,16px)}.card{border-radius:var(--r,16px);padding:var
 .empty::before{content:none!important;display:none!important}
 .stitch{display:none!important}
 .stitch,.scal::before,.hero::after,h2::before{display:none!important}
+.gal{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0}.gi{position:relative;width:92px;height:92px;border-radius:14px;overflow:hidden;border:2px solid var(--mv-l);background:var(--card);padding:0;cursor:pointer}.gi.main{border-color:var(--mv)}.gi img{width:100%;height:100%;object-fit:cover;display:block}
+.gi .gb{position:absolute;inset-inline:0;bottom:0;display:flex;gap:4px;justify-content:space-between;padding:4px;background:linear-gradient(transparent,rgba(0,0,0,.5))}.gi .gb button{width:28px;height:28px;border-radius:8px;border:0;background:rgba(255,255,255,.92);display:grid;place-items:center;cursor:pointer;color:var(--tx)}.gi .gb .del{color:#b04a3f}.gi .gb .lucide{width:16px;height:16px}
+.gi.add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-style:dashed;color:var(--mv);font-size:.8rem}.mimg{width:20px;height:20px;border-radius:6px;object-fit:cover;display:block}
 </style>
 </head>
 <body>
@@ -157,7 +160,28 @@ const FT = { income:'دخل', expense:'مصروف', savings_transfer:'تحويل
 const AC = { savings:'بيتالي (المدخرات)', rama:'راما', maryam:'مريم', general:'عام' };
 const defOpts = p => Object.fromEntries((p?.options || []).map(g => [g.name, g.values[0].label]));
 const newItem = () => ({ pid: prodCache[0]?.id, qty: 1, opts: defOpts(prodCache[0]), gift: false });
-let pf = null, invItems = [], invCache = {}, sug = null;
+let pf = null, invItems = [], invCache = {}, sug = null, pset = { rate: 15, margin: 40, wmargin: 25, sav: 20, ded: true, gross: true };
+const ceil5 = x => Math.ceil(x * 2 - 1e-9) / 2;
+function pcCalc() {
+  const mins = Number(pf.est_min) || 0, rate = Number(pset.rate) || 0, ex = Number(pf.extra_costs) || 0, s = Math.min(.9, (Number(pset.sav) || 0) / 100);
+  const mats = (pf.mats || []).filter(m => m.item_id && Number(m.qty) > 0).map(m => { const it = invItems.find(x => x.id === m.item_id) || {}, c = Number(it.unit_cost) || 0, q = Number(m.qty); return { name: it.name || '؟', unit: it.unit || '', q, c, t: q * c }; });
+  const M = mats.reduce((t, x) => t + x.t, 0), L = mins / 60 * rate, cost = M + L + ex, mk = m => { const raw = cost * (1 + (Number(m) || 0) / 100); return ceil5(pset.gross ? raw / (1 - s) : raw); };
+  return { mins, rate, ex, s, mats, M, L, cost, single: mk(pset.margin), whole: mk(pset.wmargin) };
+}
+function pcHtml() {
+  const c = pcCalc(), P = Number(pf.price) || 0, row = (l, v, st) => `<div class="row" style="padding:5px 0;${st ? 'border-top:1.5px solid var(--mv-l);margin-top:4px;font-weight:700' : ''}"><span class="grow">${l}</span><span>${v}</span></div>`, empty = !c.cost;
+  const how = m => `${money(c.cost)} + ربح ${Number(m) || 0}%${pset.gross ? ` ثم ÷ (1 − ${Number(pset.sav) || 0}% مدخرات)` : ''}، مقرّبًا لأعلى لأقرب نصف ريال`;
+  let split = '';
+  if (P > 0 && !empty) { const sav = P * c.s, md = pset.ded ? c.M : 0, pool = P - sav - md, hrs = c.mins / 60, hr = hrs ? (pool - c.ex) / hrs : null, low = hr != null && hr < c.rate - .01;
+    split = `<div class="card"><h3>4 · أين يذهب سعر ${money(P)}؟</h3>${row('مدخرات بيتالي (' + (Number(pset.sav) || 0) + '%)', money(sav))}${pset.ded ? row('تكلفة المواد (تعود للمخزون)', money(c.M)) : ''}${row('المتبقي لكما (راما ومريم)', money(pool), 1)}${hr != null ? row('ما تكسبانه فعليًا في الساعة', `<b style="color:${low ? 'var(--warn)' : 'var(--mv)'}">${money(hr)}</b>`) : ''}
+      <div class="sub" style="margin-top:6px">${low ? 'أقل من أجر الساعة الذي حددتِه (' + money(c.rate) + ')، ارفعي السعر أو الهامش.' : hr != null ? 'يغطي أجر الساعة الذي حددتِه.' : 'أدخلي وقت التنفيذ لنحسب أجر الساعة الفعلي.'}</div></div>`; }
+  return `<div class="card"><h3>1 · تكلفة القطعة الواحدة</h3>${c.mats.map(m => row(`${esc(m.name)}: ${m.q} ${esc(m.unit)} × ${money(m.c)}`, money(m.t))).join('') || '<div class="sub">لم تضيفي مواد (تبويب "المواد")، فالتكلفة بدونها.</div>'}${row('المواد', money(c.M))}${row(`العمل: ${c.mins} دقيقة ÷ 60 × ${money(c.rate)}`, money(c.L))}${row('تكاليف إضافية', money(c.ex))}${row('التكلفة الكلية للقطعة', money(c.cost), 1)}</div>
+  <div class="card"><h3>2 · السعر المقترح</h3>${empty ? '<div class="sub">أدخلي وقت التنفيذ أو أضيفي مواد ليظهر السعر المقترح.</div>' : `<div class="grid"><div><div class="sub">للمفرد</div><b style="font-size:1.5rem;color:var(--mv)">${money(c.single)}</b><div class="hint">${how(pset.margin)}</div><button class="btn sm" style="margin-top:6px" onclick="pcUse('price',${c.single})">اعتماد للمفرد</button></div>
+  <div><div class="sub">للجملة</div><b style="font-size:1.5rem;color:var(--mv)">${money(c.whole)}</b><div class="hint">${how(pset.wmargin)}</div><button class="btn sm" style="margin-top:6px" onclick="pcUse('wholesale_price',${c.whole})">اعتماد للجملة</button></div></div>`}</div>${split}`;
+}
+function pcRefresh() { const e = $('#pcres'); if (e) e.innerHTML = pcHtml(); }
+function pcUse(k, v) { pf[k] = v; const i = $(k === 'price' ? '#pf_price' : '#pf_wprice'); if (i) i.value = v; pcRefresh(); toast('تم الاعتماد، لا تنسي حفظ المنتج', true); }
+async function pcSaveDefaults() { const r = [['hourly_rate', pset.rate], ['margin_percent', pset.margin], ['wholesale_margin_percent', pset.wmargin]].map(([id, v]) => ({ id, value: Number(v) || 0 })); const { error } = await sb.from('settings').upsert(r); toast(error ? error.message : 'تم الحفظ كإعدادات افتراضية', !error); }
 const CAT = { yarn:'صوف', bands:'ربطات', packaging:'تغليف', tools:'أدوات', other:'أخرى' };
 const imgUrl = p => p ? sb.storage.from('product-images').getPublicUrl(p).data.publicUrl : '';
 const optsToText = o => (o || []).map(g => g.name + ': ' + g.values.map(v => v.label).join('، ')).join('\n');
@@ -242,6 +266,9 @@ const oCard = r => { const n = (r.order_items || []).reduce((t, i) => t + i.quan
 const tabsBar = h => `<div class="tabs">${HUBS[h].map(([k, l]) => `<button class="${HT[h] === k ? 'on' : ''}" onclick="setTab('${h}','${k}')">${l}</button>`).join('')}</div>`;
 function setTab(h, k) { HT[h] = k; render(); }
 let YC = [];
+const mixList = m => (Array.isArray(m) ? m : String(m || '').split(',')).map(x => String(x).trim()).filter(x => /^#[0-9a-f]{6}$/i.test(x));
+const swBg = (h, m) => { const L = mixList(m); if (L.length < 2) return h || '#cccccc'; const n = L.length; return 'linear-gradient(135deg,' + L.map((c, i) => `${c} ${Math.round(100 * i / n)}% ${Math.round(100 * (i + 1) / n)}%`).join(',') + ')'; };
+const qa = x => String(x).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 let COLORS = [['أبيض','#FFFFFF'],['كريمي','#F5EBDD'],['بيج','#D9C3A5'],['بني','#8B5E3C'],['أسود','#2B2B2B'],['رمادي','#9AA0A6'],['سماوي','#8EC5E8'],['أزرق','#3F6FB5'],['كحلي','#223A5E'],['أخضر','#6BAA75'],['زيتي','#7D8450'],['أصفر','#F2D262'],['برتقالي','#E9A15B'],['خوخي','#F3C7B0'],['وردي','#EFA6B8'],['أحمر','#C8514B'],['موفي','#9B7BB5']];
 const PAYERS = [['savings', 'بيتالي (المدخرات)'], ['rama', 'راما'], ['maryam', 'مريم']];
 const UNITS = ['كرة','متر','قطعة','علبة','كيس','رول','لفة'];
@@ -294,7 +321,7 @@ const itemCard = (i, x, opts) => { const q = i.quantity, d = x.done_total, mine 
 
 /* ---------- شراء باقة ---------- */
 function packBuy() {
-  const rows = COLORS.map(([n, h], i) => `<div class="row pkc"><i class="sw big" style="background:${esc(h)}"></i><b class="grow">${esc(n)}</b><div class="stp2"><button type="button" onclick="pkStep('pk_c${i}',-1)" aria-label="إنقاص">${ic('minus')}</button><input id="pk_c${i}" inputmode="numeric" value="0" oninput="pkSum()"><button type="button" onclick="pkStep('pk_c${i}',1)" aria-label="زيادة">${ic('plus')}</button></div></div>`).join('');
+  const rows = COLORS.map(([n, h, m], i) => `<div class="row pkc"><i class="sw big" style="background:${swBg(h, m)}"></i><b class="grow">${esc(n)}</b><div class="stp2"><button type="button" onclick="pkStep('pk_c${i}',-1)" aria-label="إنقاص">${ic('minus')}</button><input id="pk_c${i}" inputmode="numeric" value="0" oninput="pkSum()"><button type="button" onclick="pkStep('pk_c${i}',1)" aria-label="زيادة">${ic('plus')}</button></div></div>`).join('');
   openM(`<div class="mh"><h3>شراء باقة</h3><button class="ibtn" onclick="closeM()" aria-label="إغلاق">${ic('x')}</button></div><div class="sub">مثال: 10 كرات صوف بـ40 ريال + رسوم توصيل. نوزّع التكلفة الكلية على القطع والألوان تلقائيًا.</div>
   ${[{ id: 'name', label: 'اسم الخامة', req: 1, ph: 'مثال: صوف فابريك' }, { id: 'cat', type: 'chips', label: 'النوع', value: 'yarn', options: Object.entries(CAT).map(([k, v]) => [k, v, CATI[k]]) }, { id: 'unit', type: 'chips', label: 'وحدة القطعة', value: 'كرة', options: UNITS.map(u => [u, u]) },
     { id: 'price', type: 'number', label: 'سعر الباقة (ر.س)', req: 1, ph: '40' }, { id: 'ship', type: 'number', label: 'رسوم التوصيل أو أي إضافات (ر.س)', ph: '0' }, { id: 'from', type: 'seg', label: 'من دفع؟', value: 'savings', options: PAYERS }].map(fld).join('')}
@@ -392,25 +419,28 @@ function fld(f) {
   const id = 'mf_' + f.id, v = f.value ?? '', lab = `<label for="${id}">${f.label}${f.req ? '<b class="rq"> *</b>' : ''}</label>`, hint = f.hint ? `<div class="hint">${f.hint}</div>` : '';
   let inp;
   if (f.type === 'chips' || f.type === 'seg') inp = `<input type="hidden" id="${id}" value="${esc(v)}"><div class="chips ${f.type}">${f.options.map(([o, l, i]) => `<button type="button" class="${String(o) === String(v) ? 'on' : ''}" onclick="pickChip('${id}',this,'${esc(o)}')">${i ? ic(i) : ''}${esc(l)}</button>`).join('')}</div>`;
-  else if (f.type === 'swatch') inp = `<input type="hidden" id="${id}" value="${esc(v)}"><div class="sws">${COLORS.map(([n, h]) => `<button type="button" class="sw2 ${v === h ? 'on' : ''}" title="${n}" style="background:${h}" onclick="pickChip('${id}',this,'${h}')"></button>`).join('')}<label class="sw2 cust" title="لون مخصص">${ic('palette')}<input type="color" value="${v || '#cccccc'}" oninput="pickChip('${id}',this.parentNode,this.value)"></label><button type="button" class="chipx" onclick="pickChip('${id}',null,'')">بدون لون</button></div><button type="button" class="btn soft sm" style="margin-top:6px" onclick="colorManager()">${ic('palette')} إدارة قائمة الألوان</button>`;
+  else if (f.type === 'swatch') inp = `<input type="hidden" id="${id}" value="${esc(v)}"><div class="sws">${COLORS.map(([n, h, m]) => `<button type="button" class="sw2 ${v === h ? 'on' : ''}" title="${esc(n)}" style="background:${swBg(h, m)}" onclick="pickChip('${id}',this,'${h}')"></button>`).join('')}<label class="sw2 cust" title="لون مخصص">${ic('palette')}<input type="color" value="${v || '#cccccc'}" oninput="pickChip('${id}',this.parentNode,this.value)"></label><button type="button" class="chipx" onclick="pickChip('${id}',null,'')">بدون لون</button></div><button type="button" class="btn soft sm" style="margin-top:6px" onclick="colorManager()">${ic('palette')} إدارة قائمة الألوان</button>`;
   else if (f.type === 'stepper') inp = `<div class="stp2"><button type="button" onclick="stepIn('${id}',-1)">${ic('minus')}</button><input id="${id}" inputmode="decimal" value="${esc(v)}" placeholder="0"><button type="button" onclick="stepIn('${id}',1)">${ic('plus')}</button></div>`;
   else if (f.type === 'select') inp = `<select id="${id}">${f.options.map(([o, l]) => `<option value="${esc(o)}" ${String(o) === String(v) ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
   else if (f.type === 'textarea') inp = `<textarea id="${id}" rows="3" placeholder="${esc(f.ph || '')}">${esc(v)}</textarea>`;
   else inp = `<input id="${id}" type="${f.type === 'number' ? 'text' : f.type || 'text'}" ${f.type === 'number' ? 'inputmode="decimal"' : ''} value="${esc(v)}" placeholder="${esc(f.ph || '')}">`;
   return `<div class="fg">${lab}${inp}${hint}</div>`;
 }
-async function loadColors() { const { data, error } = await sb.from('yarn_colors').select('*').order('sort_order').order('created_at'); YC = error ? [] : (data || []); if (YC.length) COLORS = YC.map(c => [c.name, c.hex]); }
-const colorRows = () => YC.map(c => `<div class="row pkc"><i class="sw big" style="background:${esc(c.hex)}"></i><b class="grow">${esc(c.name)}</b><button class="btn del sm" onclick="colorDel('${c.id}')" aria-label="حذف اللون">${ic('trash-2')}</button></div>`).join('') || '<div class="sub" style="margin:10px 0">لا توجد ألوان بعد.</div>';
+async function loadColors() { const { data, error } = await sb.from('yarn_colors').select('*').order('sort_order').order('created_at'); YC = error ? [] : (data || []); if (YC.length) COLORS = YC.map(c => [c.name, c.hex, c.mix || '']); }
+const colorRows = () => YC.map(c => `<div class="row pkc"><i class="sw big" style="background:${swBg(c.hex, c.mix)}"></i><b class="grow">${esc(c.name)}${mixList(c.mix).length > 1 ? ' <span class="tag">مختلط</span>' : ''}</b><button class="btn del sm" onclick="colorDel('${c.id}')" aria-label="حذف اللون">${ic('trash-2')}</button></div>`).join('') || '<div class="sub" style="margin:10px 0">لا توجد ألوان بعد.</div>';
 function colorManager() {
-  openM(`<div class="mh"><h3>ألوان الخيوط</h3><button class="ibtn" onclick="closeM()" aria-label="إغلاق">${ic('x')}</button></div><div class="sub">قائمة ثابتة تظهر عند إضافة مادة أو شراء باقة. أضيفي لونًا جديدًا مرة واحدة واحذفي ما لا تحتاجينه.</div><div id="cm_l">${colorRows()}</div>
-  <div class="row" style="margin-top:12px"><input type="color" id="cm_h" value="#c0a0c0" style="width:52px;height:44px;padding:2px"><input id="cm_n" class="grow" placeholder="اسم اللون (مثال: توتي)"><button class="btn" onclick="colorAdd()">${ic('plus')} إضافة</button></div>`);
+  openM(`<div class="mh"><h3>قائمة الألوان الثابتة</h3><button class="ibtn" onclick="closeM();render()" aria-label="إغلاق">${ic('x')}</button></div><div class="sub">هذه ألوانك الثابتة، فلا تتغير درجتها كل مرة. احذفي ما لا تحتاجينه وأضيفي ألوانك، بما فيها الألوان المختلطة.</div><div id="cm_l" style="max-height:38vh;overflow:auto">${colorRows()}</div>
+  <div class="fsec">إضافة لون</div><div class="row"><select id="cm_k" style="width:auto" onchange="cmKind()"><option value="1">لون واحد</option><option value="2">مختلط من لونين</option><option value="3">مختلط من 3 ألوان</option></select><input type="color" id="cm_h" value="#c0a0c0" style="width:48px;height:44px;padding:2px"><input type="color" id="cm_h2" value="#ffffff" style="width:48px;height:44px;padding:2px;display:none"><input type="color" id="cm_h3" value="#888888" style="width:48px;height:44px;padding:2px;display:none"></div>
+  <div class="row" style="margin-top:8px"><input id="cm_n" class="grow" placeholder="اسم اللون (مثال: توتي، أحمر وأبيض)"><button class="btn" onclick="colorAdd()">${ic('plus')} إضافة</button></div>`);
 }
+function cmKind() { const k = Number($('#cm_k').value); $('#cm_h2').style.display = k >= 2 ? '' : 'none'; $('#cm_h3').style.display = k >= 3 ? '' : 'none'; }
+async function libAdd(name, hex, mix) { if (YC.some(c => c.name === name)) return; const r = await sb.from('yarn_colors').insert({ name, hex, mix: mix || null, sort_order: YC.length + 1 }); if (r.error) toast(r.error.message); await loadColors(); }
 async function colorAdd() {
-  const n = $('#cm_n').value.trim(), h = $('#cm_h').value; if (!n) return toast('اكتبي اسم اللون');
-  const { error } = await sb.from('yarn_colors').insert({ name: n, hex: h, sort_order: YC.length + 1 }); if (error) return toast(error.message);
+  const n = $('#cm_n').value.trim(), k = Number($('#cm_k').value), cs = [$('#cm_h').value, $('#cm_h2').value, $('#cm_h3').value].slice(0, k); if (!n) return toast('اكتبي اسم اللون'); if (YC.some(c => c.name === n)) return toast('يوجد لون بهذا الاسم');
+  const { error } = await sb.from('yarn_colors').insert({ name: n, hex: cs[0], mix: k > 1 ? cs.join(',') : null, sort_order: YC.length + 1 }); if (error) return toast(error.message);
   await loadColors(); $('#cm_l').innerHTML = colorRows(); $('#cm_n').value = ''; toast('أضيف اللون', true);
 }
-async function colorDel(id) { if (!await ask('حذف هذا اللون من القائمة؟ المواد التي تستخدمه تحتفظ بلونها.')) return; const { error } = await sb.from('yarn_colors').delete().eq('id', id); if (error) return toast(error.message); await loadColors(); colorManager(); }
+async function colorDel(id) { if (!await ask('حذف هذا اللون من القائمة؟ المنتجات والمواد التي تستخدمه تحتفظ بلونها.')) return; const { error } = await sb.from('yarn_colors').delete().eq('id', id); if (error) return toast(error.message); await loadColors(); colorManager(); }
 function pickChip(id, el, val) { const h = $('#' + id); h.value = val; const w = el ? el.closest('.chips,.sws') : h.nextElementSibling; w.querySelectorAll('button,label.sw2').forEach(b => b.classList.remove('on')); if (el) el.classList.add('on'); }
 function stepIn(id, d) { const i = $('#' + id); i.value = Math.max(0, (Number(i.value) || 0) + d); }
 
@@ -582,28 +612,36 @@ const V = {
     const t0 = `<div class="card"><label class="lb">اسم المنتج <b class="rq">*</b></label><input value="${esc(f.name)}" oninput="pf.name=this.value" placeholder="مثال: ربطة مقفلة">
       <label class="lb">وصف قصير للعميل</label><textarea rows="3" oninput="pf.description=this.value" placeholder="مثال: ربطة كروشيه ناعمة بحجم وسط">${esc(f.description)}</textarea>
       ${'category_id' in f ? `<label class="lb">القسم</label><div class="row"><select class="grow" onchange="pf.category_id=this.value"><option value="">بدون قسم</option>${catCache.map(c => `<option value="${c.id}" ${c.id === f.category_id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select><button class="btn soft sm" onclick="catManager()">${ic('layers')} إدارة الأقسام</button></div>` : ''}
-      <label class="lb">صورة المنتج</label><div class="row">${f.image_path ? `<img class="th" style="width:80px;height:80px" src="${imgUrl(f.image_path)}" alt="">` : `<span class="th" style="width:80px;height:80px">${ic('image')}</span>`}<label class="btn soft">${ic('upload')} اختيار صورة<input type="file" accept="image/*" hidden onchange="upImg(this.files[0])"></label></div>
-      <label class="lb">وقت تنفيذ القطعة الواحدة (بالساعات)</label><input type="text" inputmode="decimal" value="${esc(f.est_hours)}" oninput="pf.est_hours=this.value" placeholder="مثال: 1.5"><div class="hint">يدخل في حساب التكلفة واقتراح السعر.</div>
+      <label class="lb">صور المنتج</label><div class="gal">${(f.images || []).map((p, k) => `<div class="gi ${k === 0 ? 'main' : ''}"><img src="${imgUrl(p)}" alt=""><div class="gb">${k === 0 ? '<span class="tag s-ready">الرئيسية</span>' : `<button onclick="imgMain(${k})" aria-label="جعلها الرئيسية" title="جعلها الرئيسية">${ic('star')}</button>`}<button class="del" onclick="imgDel(${k})" aria-label="حذف الصورة">${ic('trash-2')}</button></div></div>`).join('')}<label class="gi add">${ic('upload')}<span>إضافة صور</span><input type="file" accept="image/*" multiple hidden onchange="upImgs(this.files)"></label></div><div class="hint">الأولى هي الرئيسية. اربطي أي صورة بلون أو خيار من تبويب "الألوان والخيارات" فتظهر للعميل عند اختياره.</div>
+      <label class="lb">وقت تنفيذ القطعة الواحدة (بالدقائق)</label><input type="text" inputmode="numeric" value="${esc(f.est_min)}" oninput="pf.est_min=this.value" placeholder="مثال: 45"><div class="hint">يدخل في حساب التكلفة والسعر (تبويب التسعير).</div>
       <div class="row" style="margin-top:12px"><label class="chk"><input type="checkbox" ${f.is_available ? 'checked' : ''} onchange="pf.is_available=this.checked"> متاح للطلب</label><label class="chk"><input type="checkbox" ${f.is_paused ? 'checked' : ''} onchange="pf.is_paused=this.checked"> إيقاف مؤقت</label></div>
       <label class="lb">ملاحظات داخلية (لا تظهر للعملاء)</label><textarea rows="2" oninput="pf.internal_notes=this.value">${esc(f.internal_notes)}</textarea></div>`;
     const t1 = `<datalist id="dl_gn"><option value="اللون"><option value="الحجم"><option value="الشكل"><option value="الخامة"></datalist><div class="sub" style="margin-bottom:8px">الخيارات هي ما يختاره العميل عند الطلب، مثل اللون أو الحجم. أنشئي خيارًا واحدًا لكل نوع.</div>
       ${f.groups.map((g, i) => `<div class="card"><div class="row"><input class="grow" placeholder="اسم الخيار: اللون، الحجم..." list="dl_gn" value="${esc(g.name)}" oninput="pf.groups[${i}].name=this.value">
         <div class="chips seg"><button class="${g.kind === 'color' ? 'on' : ''}" onclick="gKind(${i},'color')">${ic('palette')} ألوان</button><button class="${g.kind !== 'color' ? 'on' : ''}" onclick="gKind(${i},'text')">${ic('type')} نص</button></div><button class="ibtn" onclick="gDel(${i})" aria-label="حذف الخيار">${ic('trash-2')}</button></div>
-        <div class="chipsrow" style="margin-top:10px">${g.values.map((v, j) => `<span class="chipv ${v.available === false ? 'off' : ''}">${v.hex ? `<i class="sw" style="background:${esc(v.hex)}"></i>` : ''}<span onclick="vToggle(${i},${j})" title="اضغطي لإيقاف أو تفعيل">${esc(v.label)}</span><button onclick="vDel(${i},${j})" aria-label="حذف">${ic('x')}</button></span>`).join('') || '<span class="sub">لم تضيفي قيمًا بعد</span>'}</div>
-        ${g.kind === 'color' ? `<div class="sub" style="margin-top:10px">اضغطي لونًا جاهزًا لإضافته:</div><div class="sws">${COLORS.map(([n, h]) => `<button class="sw2" title="${n}" style="background:${h}" onclick="vAdd(${i},'${n}','${h}')"></button>`).join('')}</div>
-          <div class="row" style="margin-top:8px"><input type="color" id="gh_${i}" value="#cccccc" style="width:48px;padding:2px"><input id="gv_${i}" class="grow" placeholder="لون مخصص: اكتبي اسمه ثم اختاري اللون"><button class="btn soft sm" onclick="vAddIn(${i})">${ic('plus')} إضافة</button></div>`
+        <div class="chipsrow" style="margin-top:10px">${g.values.map((v, j) => `<span class="chipv ${v.available === false ? 'off' : ''}">${v.hex ? `<i class="sw" style="background:${swBg(v.hex, v.mix)}"></i>` : ''}<span onclick="vToggle(${i},${j})" title="اضغطي لإيقاف أو تفعيل">${esc(v.label)}</span><button onclick="linkImg(${i},${j})" aria-label="ربط بصورة" title="ربط بصورة">${v.image ? `<img class="mimg" src="${imgUrl(v.image)}" alt="">` : ic('image')}</button><button onclick="vDel(${i},${j})" aria-label="حذف">${ic('x')}</button></span>`).join('') || '<span class="sub">لم تضيفي قيمًا بعد</span>'}</div>
+        ${g.kind === 'color' ? `<div class="sub" style="margin-top:10px">اضغطي لونًا جاهزًا لإضافته:</div><div class="sws">${COLORS.map(([n, h, m]) => `<button class="sw2" title="${esc(n)}" style="background:${swBg(h, m)}" onclick="vAdd(${i},'${qa(n)}','${h}','${m || ''}')"></button>`).join('')}</div><button class="btn soft sm" style="margin-top:6px" onclick="colorManager()">${ic('palette')} إدارة قائمة الألوان (حذف وإضافة ثابتة)</button>
+          <div class="fsec">لون جديد</div><div class="row"><input type="color" id="gh_${i}" value="#cccccc" style="width:48px;padding:2px"><input id="gv_${i}" class="grow" placeholder="اسم اللون"><button class="btn soft sm" onclick="vAddIn(${i})">${ic('plus')} إضافة</button></div><label class="chk" style="margin-top:4px"><input type="checkbox" id="gs_${i}" checked> أحفظه في قائمتي الثابتة</label>
+          <div class="fsec">لون مختلط</div><div class="row"><select id="gmc_${i}" style="width:auto"><option value="2">لونان</option><option value="3">3 ألوان</option></select><input type="color" id="gm1_${i}" value="#ff8080" style="width:48px;padding:2px"><input type="color" id="gm2_${i}" value="#ffffff" style="width:48px;padding:2px"><input type="color" id="gm3_${i}" value="#888888" style="width:48px;padding:2px"></div>
+          <div class="row" style="margin-top:6px"><input id="gmn_${i}" class="grow" placeholder="اسم اللون المختلط (مثال: وردي وأبيض)"><button class="btn soft sm" onclick="vAddMix(${i})">${ic('plus')} إضافة</button></div><label class="chk" style="margin-top:4px"><input type="checkbox" id="gms_${i}" checked> أحفظه في قائمتي الثابتة</label>`
         : `<div class="row" style="margin-top:10px"><input id="gv_${i}" class="grow" placeholder="مثال: صغير" onkeydown="if(event.key==='Enter')vAddIn(${i})"><button class="btn soft sm" onclick="vAddIn(${i})">${ic('plus')} إضافة</button></div>`}</div>`).join('')}
       <button class="btn soft" onclick="gAdd()">${ic('plus')} إضافة خيار آخر</button>`;
     const t2 = `<div class="card"><div class="sub" style="margin-bottom:10px">المواد التي تُستخدم لصنع قطعة واحدة. تُخصم تلقائيًا من المخزون عند تأكيد الطلب، وتدخل في حساب التكلفة.</div>
       ${f.mats.map((m, i) => `<div class="row" style="margin-bottom:8px"><select class="grow" onchange="pf.mats[${i}].item_id=this.value;render()">${invItems.map(x => `<option value="${x.id}" ${x.id === m.item_id ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select>
         <div class="stp2"><input inputmode="decimal" value="${esc(m.qty)}" oninput="pf.mats[${i}].qty=this.value"><span class="sub" style="padding:0 10px">${esc(uni(m.item_id))}</span></div><button class="ibtn" onclick="pf.mats.splice(${i},1);render()" aria-label="حذف">${ic('x')}</button></div>`).join('') || '<div class="sub">لم تضيفي مواد بعد.</div>'}
       <button class="btn soft" onclick="addMat()">${ic('plus')} إضافة مادة</button></div>`;
-    const t3 = `<div class="card"><div class="grid"><div><label class="lb">سعر القطعة (ر.س)</label><input type="text" inputmode="decimal" value="${esc(f.price)}" oninput="pf.price=this.value"></div>
-      <div><label class="lb">تكاليف إضافية للقطعة (ر.س)</label><input type="text" inputmode="decimal" value="${esc(f.extra_costs)}" oninput="pf.extra_costs=this.value"><div class="hint">مثل التغليف أو الأدوات.</div></div>
-      <div><label class="lb">سعر الجملة (اختياري)</label><input type="text" inputmode="decimal" value="${esc(f.wholesale_price)}" oninput="pf.wholesale_price=this.value"></div>
-      <div><label class="lb">تبدأ الجملة من كمية</label><input type="text" inputmode="numeric" value="${esc(f.wholesale_min_qty)}" oninput="pf.wholesale_min_qty=this.value"></div></div>
-      <button class="btn soft" style="margin-top:12px" onclick="suggest()">${ic('sparkles')} اقترحي لي سعرًا</button>
-      ${sug ? `<div class="sub" style="margin-top:10px">المواد ${money(sug.materials_cost)} + الأجر ${money(sug.labor_cost)} + إضافي ${money(sug.extra_costs)} = التكلفة ${money(sug.total_cost)}</div><div class="row" style="margin-top:8px"><button class="btn sm" onclick="pf.price=${sug.suggested_single};render()">اعتمدي ${money(sug.suggested_single)} للمفرد</button><button class="btn sm" onclick="pf.wholesale_price=${sug.suggested_wholesale};render()">اعتمدي ${money(sug.suggested_wholesale)} للجملة</button></div>` : ''}</div>`;
+    const t3 = `<div class="card"><div class="sub" style="margin-bottom:10px">أدخلي الأرقام هنا، ويظهر الحساب كاملًا خطوة بخطوة في الأسفل. لا يتغير شيء حتى تضغطي "اعتماد".</div><div class="grid">
+      <div><label class="lb">أجر الساعة (ر.س)</label><input inputmode="decimal" value="${esc(pset.rate)}" oninput="pset.rate=this.value;pcRefresh()"><div class="hint">كم تريدان أن تكسبا في الساعة؟</div></div>
+      <div><label class="lb">وقت تنفيذ القطعة (بالدقائق)</label><input inputmode="numeric" value="${esc(f.est_min)}" oninput="pf.est_min=this.value;pcRefresh()"></div>
+      <div><label class="lb">تكاليف إضافية للقطعة (ر.س)</label><input inputmode="decimal" value="${esc(f.extra_costs)}" oninput="pf.extra_costs=this.value;pcRefresh()"><div class="hint">تغليف، أدوات...</div></div>
+      <div><label class="lb">هامش الربح للمفرد (%)</label><input inputmode="decimal" value="${esc(pset.margin)}" oninput="pset.margin=this.value;pcRefresh()"><div class="hint">نسبة تُضاف فوق التكلفة.</div></div>
+      <div><label class="lb">هامش الربح للجملة (%)</label><input inputmode="decimal" value="${esc(pset.wmargin)}" oninput="pset.wmargin=this.value;pcRefresh()"></div></div>
+      <label class="chk" style="margin-top:10px"><input type="checkbox" ${pset.gross ? 'checked' : ''} onchange="pset.gross=this.checked;pcRefresh()"> أغطّي نسبة مدخرات بيتالي (${esc(pset.sav)}%) داخل السعر</label><div class="hint">من كل طلب تذهب نسبة للمدخرات، فنرفع السعر قليلًا ليبقى لكما الربح المطلوب كاملًا.</div>
+      <button class="btn soft sm" style="margin-top:8px" onclick="pcSaveDefaults()">${ic('save')} حفظ الأجر والهوامش كإعدادات افتراضية</button></div>
+      <div id="pcres">${pcHtml()}</div>
+      <div class="card"><h3>3 · السعر المعتمد للعميل</h3><div class="grid"><div><label class="lb">سعر القطعة (ر.س)</label><input id="pf_price" inputmode="decimal" value="${esc(f.price)}" oninput="pf.price=this.value;pcRefresh()"></div>
+      <div><label class="lb">سعر الجملة (اختياري)</label><input id="pf_wprice" inputmode="decimal" value="${esc(f.wholesale_price)}" oninput="pf.wholesale_price=this.value"></div>
+      <div><label class="lb">تبدأ الجملة من كمية</label><input inputmode="numeric" value="${esc(f.wholesale_min_qty)}" oninput="pf.wholesale_min_qty=this.value"></div></div></div>`;
     return `<button class="btn soft sm" onclick="go('products')">${ic('arrow-right')} المنتجات</button><h2 style="margin:10px 0">${f.id ? 'تعديل المنتج' : 'منتج جديد'}</h2>
     <div class="tabs">${steps.map((t, i) => `<button class="${pfTab === i ? 'on' : ''}" onclick="pfTab=${i};render()">${i + 1} · ${t}</button>`).join('')}</div>${[t0, t1, t2, t3][pfTab]}
     <div class="stickybar">${pfTab > 0 ? `<button class="btn soft" onclick="pfTab--;render()">السابق</button>` : ''}${pfTab < 3 ? `<button class="btn soft" onclick="pfTab++;render()">التالي</button>` : ''}<button class="btn grow" onclick="saveProduct()">${ic('save')} حفظ المنتج</button>${f.id ? `<button class="btn del" onclick="delProduct()" aria-label="حذف">${ic('trash-2')}</button>` : ''}</div>`;
@@ -868,33 +906,46 @@ async function delItem(id) {
 }
 async function editProduct(id) {
   await loadCats();
-  const inv = await sb.from('inventory_items').select('id,name,unit,color').is('deleted_at', null).order('name'); invItems = inv.data || []; sug = null; pfTab = 0;
-  if (id === 'new') pf = { name: '', description: '', image_path: '', est_hours: '', is_available: true, is_paused: false, price: '', wholesale_price: '', wholesale_min_qty: '', extra_costs: '', internal_notes: '', mats: [], ...(catOK ? { category_id: '' } : {}), groups: [{ name: 'اللون', kind: 'color', values: [] }] };
+  const inv = await sb.from('inventory_items').select('id,name,unit,color,unit_cost').is('deleted_at', null).order('name'); invItems = inv.data || []; sug = null; pfTab = 0;
+  { const st = await sb.from('settings').select('id,value'), S = Object.fromEntries((st.data || []).map(r => [r.id, r.value])); pset = { rate: S.hourly_rate ?? 15, margin: S.margin_percent ?? 40, wmargin: S.wholesale_margin_percent ?? 25, sav: S.savings_percent ?? 20, ded: S.deduct_materials_cost !== false, gross: pset.gross !== false }; }
+  if (id === 'new') pf = { name: '', description: '', image_path: '', est_hours: '', est_min: '', images: [], is_available: true, is_paused: false, price: '', wholesale_price: '', wholesale_min_qty: '', extra_costs: '', internal_notes: '', mats: [], ...(catOK ? { category_id: '' } : {}), groups: [{ name: 'اللون', kind: 'color', values: [] }] };
   else {
     const [p, pr, m] = await Promise.all([sb.from('products').select('*').eq('id', id).single(), sb.from('product_private').select('*').eq('product_id', id).maybeSingle(), sb.from('product_materials').select('item_id,qty_per_piece').eq('product_id', id)]);
-    pf = { ...p.data, extra_costs: pr.data?.extra_costs ?? '', internal_notes: pr.data?.internal_notes ?? '', mats: (m.data || []).map(x => ({ item_id: x.item_id, qty: x.qty_per_piece })),
-      groups: (p.data.options || []).map(g => ({ name: g.name, kind: g.values.some(v => v.hex) ? 'color' : 'text', values: g.values.map(v => ({ label: v.label, hex: v.hex || '', available: v.available !== false })) })) };
+    pf = { ...p.data, est_min: p.data.est_hours ? String(Math.round(Number(p.data.est_hours) * 60)) : '', images: imgsOf(p.data), extra_costs: pr.data?.extra_costs ?? '', internal_notes: pr.data?.internal_notes ?? '', mats: (m.data || []).map(x => ({ item_id: x.item_id, qty: x.qty_per_piece })),
+      groups: (p.data.options || []).map(g => ({ name: g.name, kind: g.values.some(v => v.hex) ? 'color' : 'text', values: g.values.map(v => ({ label: v.label, hex: v.hex || '', mix: (v.mix || []).join(','), image: v.image || '', available: v.available !== false })) })) };
   }
   go('product');
 }
-const pfOptions = () => pf.groups.filter(g => g.name.trim() && g.values.length).map(g => ({ name: g.name.trim(), values: g.values.map(v => ({ label: v.label, ...(v.hex ? { hex: v.hex } : {}), available: v.available !== false })) }));
+const pfOptions = () => pf.groups.filter(g => g.name.trim() && g.values.length).map(g => ({ name: g.name.trim(), values: g.values.map(v => ({ label: v.label, ...(v.hex ? { hex: v.hex } : {}), ...(mixList(v.mix).length > 1 ? { mix: mixList(v.mix) } : {}), ...(v.image ? { image: v.image } : {}), available: v.available !== false })) }));
 function gAdd() { pf.groups.push({ name: '', kind: 'text', values: [] }); render(); }
 function gDel(i) { pf.groups.splice(i, 1); render(); }
 function gKind(i, k) { pf.groups[i].kind = k; render(); }
-function vAdd(i, label, hex) { label = (label || '').trim(); if (!label) return toast('اكتبي اسم الخيار'); const g = pf.groups[i]; if (g.values.some(v => v.label === label)) return toast('هذا الخيار موجود'); g.values.push({ label, hex: hex || '', available: true }); render(); }
-function vAddIn(i) { vAdd(i, $('#gv_' + i).value, pf.groups[i].kind === 'color' ? $('#gh_' + i).value : ''); }
+function vAdd(i, label, hex, mix) { label = (label || '').trim(); if (!label) return toast('اكتبي اسم الخيار'); const g = pf.groups[i]; if (g.values.some(v => v.label === label)) return toast('هذا الخيار موجود'); g.values.push({ label, hex: hex || '', mix: mix || '', image: '', available: true }); render(); }
+function vAddIn(i) { const isC = pf.groups[i].kind === 'color', lab = $('#gv_' + i).value.trim(), hex = isC ? $('#gh_' + i).value : ''; if (isC && lab && $('#gs_' + i)?.checked && !pf.groups[i].values.some(v => v.label === lab)) libAdd(lab, hex, ''); vAdd(i, lab, hex, ''); }
+function vAddMix(i) {
+  const lab = $('#gmn_' + i).value.trim(), k = Number($('#gmc_' + i).value), cs = [$('#gm1_' + i).value, $('#gm2_' + i).value, $('#gm3_' + i).value].slice(0, k); if (!lab) return toast('اكتبي اسمًا للون المختلط');
+  if ($('#gms_' + i)?.checked && !pf.groups[i].values.some(v => v.label === lab)) libAdd(lab, cs[0], cs.join(',')); vAdd(i, lab, cs[0], cs.join(','));
+}
 function vDel(i, j) { pf.groups[i].values.splice(j, 1); render(); }
 function vToggle(i, j) { const v = pf.groups[i].values[j]; v.available = v.available === false; render(); }
 function addMat() { if (!invItems.length) return toast('أضيفي مادة في المخزون أولًا'); pf.mats.push({ item_id: invItems[0].id, qty: 1 }); render(); }
-async function upImg(file) {
-  if (!file) return; const path = crypto.randomUUID() + '.' + (file.name.split('.').pop() || 'jpg').toLowerCase();
-  const { error } = await sb.storage.from('product-images').upload(path, file, { contentType: file.type });
-  if (error) return toast(error.message); pf.image_path = path; render();
+const imgsOf = p => { const a = Array.isArray(p.images) ? p.images.filter(Boolean) : []; if (p.image_path && !a.includes(p.image_path)) a.unshift(p.image_path); return a; };
+async function upImgs(files) {
+  if (!files || !files.length) return; toast('جارٍ رفع الصور...');
+  for (const file of files) { const path = crypto.randomUUID() + '.' + (file.name.split('.').pop() || 'jpg').toLowerCase(); const { error } = await sb.storage.from('product-images').upload(path, file, { contentType: file.type }); if (error) { toast(error.message); break; } pf.images.push(path); }
+  pf.image_path = pf.images[0] || ''; render();
 }
+function imgDel(k) { const p = pf.images[k]; pf.images.splice(k, 1); pf.groups.forEach(g => g.values.forEach(v => { if (v.image === p) v.image = ''; })); pf.image_path = pf.images[0] || ''; render(); }
+function imgMain(k) { const [p] = pf.images.splice(k, 1); pf.images.unshift(p); pf.image_path = p; render(); }
+function linkImg(i, j) {
+  if (!pf.images.length) return toast('أضيفي صور المنتج أولًا من تبويب الأساسيات'); const v = pf.groups[i].values[j];
+  openM(`<div class="mh"><h3>ربط صورة بـ "${esc(v.label)}"</h3><button class="ibtn" onclick="closeM()" aria-label="إغلاق">${ic('x')}</button></div><div class="sub">عندما يختار العميل هذا الخيار تظهر له الصورة المربوطة.</div><div class="gal" style="margin-top:10px">${pf.images.map((p, k) => `<button type="button" class="gi ${v.image === p ? 'main' : ''}" onclick="setLink(${i},${j},${k})"><img src="${imgUrl(p)}" alt=""></button>`).join('')}</div><button class="btn soft" style="margin-top:10px" onclick="setLink(${i},${j},-1)">بدون صورة</button>`);
+}
+function setLink(i, j, k) { pf.groups[i].values[j].image = k < 0 ? '' : pf.images[k]; closeM(); render(); }
 async function saveProduct(quiet) {
   const f = pf, n = v => v === '' || v == null ? null : Number(v);
   if (!f.name.trim()) { toast('اكتبي اسم المنتج'); return false; }
-  const row = { name: f.name.trim(), description: f.description || null, price: n(f.price) || 0, wholesale_price: n(f.wholesale_price), wholesale_min_qty: n(f.wholesale_min_qty), est_hours: n(f.est_hours) || 0, is_available: f.is_available, is_paused: f.is_paused, image_path: f.image_path || null, options: pfOptions() };
+  const row = { name: f.name.trim(), description: f.description || null, price: n(f.price) || 0, wholesale_price: n(f.wholesale_price), wholesale_min_qty: n(f.wholesale_min_qty), est_hours: n(f.est_min) ? Math.round(n(f.est_min) / 60 * 100) / 100 : 0, is_available: f.is_available, is_paused: f.is_paused, image_path: (f.images && f.images[0]) || f.image_path || null, images: f.images || [], options: pfOptions() };
   if ('category_id' in f) row.category_id = f.category_id || null;
   let id = f.id;
   if (id) { const { error } = await sb.from('products').update(row).eq('id', id); if (error) { toast(error.message); return false; } }
