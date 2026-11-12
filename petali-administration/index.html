@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>مساحة بيتالي</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Cairo:wght@400;600;700&family=Almarai:wght@400;700&family=Readex+Pro:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
 :root{--mv:#A86B9E;--mv-l:#E8D5E5;--pk:#F4DDE5;--pe:#F7E1D7;--bg:#FFF9F4;--card:#FFFCFA;--tx:#554852;--tx2:#9A8C96;--ok:#7FA38A;--warn:#C9776B}
 *{box-sizing:border-box;margin:0}
-html,body{background:var(--bg);color:var(--tx);font-family:Tajawal,system-ui,sans-serif;font-size:16px}
+html,body{background:var(--bg);color:var(--tx);font-family:var(--ff,Tajawal),system-ui,sans-serif;font-size:16px}button,input,select,textarea{font-family:inherit}
 body{padding:env(safe-area-inset-top) 0 calc(76px + env(safe-area-inset-bottom))}
 button,input,select,textarea{font:inherit;color:inherit}
 h2{font-size:1.25rem;margin:4px 0 12px}h3{font-size:1rem;margin-bottom:8px}
@@ -238,22 +238,44 @@ function setTab(h, k) { HT[h] = k; render(); }
 const COLORS = [['أبيض','#FFFFFF'],['كريمي','#F5EBDD'],['بيج','#D9C3A5'],['بني','#8B5E3C'],['أسود','#2B2B2B'],['رمادي','#9AA0A6'],['سماوي','#8EC5E8'],['أزرق','#3F6FB5'],['كحلي','#223A5E'],['أخضر','#6BAA75'],['زيتي','#7D8450'],['أصفر','#F2D262'],['برتقالي','#E9A15B'],['خوخي','#F3C7B0'],['وردي','#EFA6B8'],['أحمر','#C8514B'],['موفي','#9B7BB5']];
 const UNITS = ['كرة','متر','قطعة','علبة','كيس','رول','لفة'];
 let pfTab = 0;
-const THEMES = { sage:['الأخضر والخوخي',{primary:'#5C7F6A',bg:'#FFF9F4',card:'#FFFCFA',text:'#554852',soft:'#F3E9E1',border:'#E6D9CE'}], sand:['الرملي والبني',{primary:'#8A6A4F',bg:'#FBF6EF',card:'#FFFFFF',text:'#3F3630',soft:'#F1E7DA',border:'#E5D8C8'}], ocean:['الأزرق الهادئ',{primary:'#3E6A8A',bg:'#F5F8FA',card:'#FFFFFF',text:'#2D3A45',soft:'#E6EEF3',border:'#D5E0E8'}], slate:['الرمادي المحايد',{primary:'#4B5563',bg:'#F6F6F5',card:'#FFFFFF',text:'#26292E',soft:'#ECECEA',border:'#DDDCD8'}] };
-const THEME0 = { ...THEMES.sage[1], radius: 16, font: 16, dense: false };
+const FONTS = { tajawal:['تجوال','Tajawal'], plex:['آي بي إم بلكس','"IBM Plex Sans Arabic"'], cairo:['القاهرة','Cairo'], almarai:['المراعي','Almarai'], readex:['ريديكس','"Readex Pro"'] };
+const THEMES = {
+  sage:['الأخضر والخوخي',{primary:'#5C7F6A',bg:'#FFF9F4',card:'#FFFCFA',text:'#554852',soft:'#F3E9E1',border:'#E6D9CE'}],
+  sand:['الرملي والبني',{primary:'#8A6A4F',bg:'#FBF6EF',card:'#FFFFFF',text:'#3F3630',soft:'#F1E7DA',border:'#E5D8C8'}],
+  ocean:['الأزرق الهادئ',{primary:'#3E6A8A',bg:'#F5F8FA',card:'#FFFFFF',text:'#2D3A45',soft:'#E6EEF3',border:'#D5E0E8'}],
+  slate:['الرمادي المحايد',{primary:'#4B5563',bg:'#F6F6F5',card:'#FFFFFF',text:'#26292E',soft:'#ECECEA',border:'#DDDCD8'}],
+  rose:['الوردي الناعم',{primary:'#B5586F',bg:'#FFF7F8',card:'#FFFFFF',text:'#4A3A40',soft:'#F9E6EA',border:'#EBD3D9'}],
+  lavender:['اللافندر',{primary:'#7B65A8',bg:'#FAF8FD',card:'#FFFFFF',text:'#3C3550',soft:'#EEE9F7',border:'#DDD5EC'}],
+  peach:['الخوخي الدافئ',{primary:'#CF7452',bg:'#FFF8F3',card:'#FFFFFF',text:'#4B3A33',soft:'#FBE9DE',border:'#EDD6C8'}],
+  mint:['النعناعي',{primary:'#3F8F7B',bg:'#F4FAF8',card:'#FFFFFF',text:'#263E39',soft:'#E0F0EB',border:'#CFE4DD'}],
+  terracotta:['الطيني',{primary:'#A8553A',bg:'#FBF5F0',card:'#FFFFFF',text:'#40302A',soft:'#F2E3D8',border:'#E3CDBE'}],
+  navy:['الكحلي الراقي',{primary:'#2F4A6D',bg:'#F6F8FB',card:'#FFFFFF',text:'#1F2B3A',soft:'#E4EAF2',border:'#D2DBE7'}],
+  mustard:['الخردلي',{primary:'#B0802A',bg:'#FFFAEF',card:'#FFFFFF',text:'#3F3524',soft:'#F6EACB',border:'#E8D9B0'}],
+  plum:['البرقوقي',{primary:'#7A3E65',bg:'#FBF6F9',card:'#FFFFFF',text:'#3B2433',soft:'#F1E0EA',border:'#E2CBD8'}],
+  olive:['الزيتي',{primary:'#667536',bg:'#F8F8EF',card:'#FFFFFF',text:'#333A22',soft:'#ECEFD9',border:'#DCE0C3'}]
+};
+const THEME0 = { ...THEMES.sage[1], radius: 16, font: 16, dense: false, family: 'tajawal' };
+let shopTheme = { ...THEMES.sage[1], radius: 22, font: 16, dense: false, family: 'plex' }, thTarget = (() => { try { return localStorage.getItem('petali_th_target') || 'both'; } catch (e) { return 'both'; } })();
 let theme = { ...THEME0 }, tT;
 const lum = h => { const c = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255).map(x => x <= .03928 ? x / 12.92 : Math.pow((x + .055) / 1.055, 2.4)); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
 function applyTheme(t) {
   const r = document.documentElement.style, set = (k, v) => r.setProperty(k, v);
   set('--mv', t.primary); set('--bg', t.bg); set('--card', t.card); set('--tx', t.text); set('--pe', t.soft); set('--pk', t.soft); set('--mv-l', t.border);
-  set('--tx2', `color-mix(in srgb, ${t.text} 58%, ${t.bg})`); set('--onmv', lum(t.primary) > .45 ? '#1f1f1f' : '#ffffff'); set('--r', t.radius + 'px'); set('--fs', t.font + 'px'); set('--pad', t.dense ? '10px' : '14px');
+  set('--tx2', `color-mix(in srgb, ${t.text} 58%, ${t.bg})`); set('--onmv', lum(t.primary) > .45 ? '#1f1f1f' : '#ffffff'); set('--ff', (FONTS[t.family] || FONTS.tajawal)[1]); set('--r', t.radius + 'px'); set('--fs', t.font + 'px'); set('--pad', t.dense ? '10px' : '14px');
   try { localStorage.setItem('petali_theme', JSON.stringify(t)); } catch (e) {}
 }
 const okHex = h => /^#[0-9a-f]{6}$/i.test(h || '');
 function cleanTheme(c) { const t = { ...THEME0, ...c }; ['primary', 'bg', 'card', 'text', 'soft', 'border'].forEach(k => { if (!okHex(t[k])) t[k] = THEME0[k]; }); t.radius = Math.min(28, Math.max(0, Number(t.radius) || 16)); t.font = Math.min(20, Math.max(13, Number(t.font) || 16)); if (Math.abs(lum(t.bg) - lum(t.text)) < .25) { t.text = THEME0.text; t.bg = THEME0.bg; t.card = THEME0.card; } return t; }
 try { const c = JSON.parse(localStorage.getItem('petali_theme')); if (c) { theme = cleanTheme(c); applyTheme(theme); } } catch (e) {}
-function tSet(k, v, re) { theme[k] = v; applyTheme(theme); clearTimeout(tT); tT = setTimeout(() => sb.from('settings').upsert({ id: 'theme_admin', value: theme }).then(r => r.error && toast(r.error.message)), 600); if (re) render(); }
-function setTheme(k) { theme = { ...theme, ...THEMES[k][1] }; applyTheme(theme); tSet('primary', theme.primary, true); }
-function tReset() { theme = { ...THEME0 }; applyTheme(theme); tSet('primary', theme.primary, true); }
+function tSet(k, v, re) {
+  if (thTarget !== 'shop') { theme[k] = v; applyTheme(theme); }
+  if (thTarget !== 'admin') shopTheme[k] = v;
+  clearTimeout(tT); tT = setTimeout(() => { const rows = []; if (thTarget !== 'shop') rows.push({ id: 'theme_admin', value: theme }); if (thTarget !== 'admin') rows.push({ id: 'theme_shop', value: shopTheme }); sb.from('settings').upsert(rows).then(r => r.error && toast(r.error.message)); }, 600);
+  if (re) render();
+}
+function setTheme(k) { Object.entries(THEMES[k][1]).forEach(([x, v]) => tSet(x, v)); render(); }
+function tReset() { Object.entries(thTarget === 'shop' ? { ...THEMES.sage[1], radius: 22, font: 16, dense: false, family: 'plex' } : THEME0).forEach(([x, v]) => tSet(x, v)); render(); }
+function setTarget(t) { thTarget = t; try { localStorage.setItem('petali_th_target', t); } catch (e) {} render(); }
 const hexOf = (opts, k, label) => { const g = (opts || []).find(g => g.name === k); return ((g && g.values) || []).find(v => v.label === label)?.hex || ''; };
 const itemCard = (i, x, opts) => { const q = i.quantity, d = x.done_total, mine = x['done_' + me.key] || 0, ok = d >= q;
   return `<div class="itm"><div class="row" style="align-items:flex-start">${i.image_path ? `<img class="th" src="${imgUrl(i.image_path)}" alt="">` : `<span class="th">${ic('flower-2')}</span>`}<div class="grow"><b>${esc(i.product_name)}${i.is_gift ? ' ' + ic('gift') : ''}</b>
@@ -336,6 +358,7 @@ async function boot() {
   (data || []).forEach(s => staff[s.id] = s);
   me = staff[session.user.id];
   sb.from('settings').select('value').eq('id', 'theme_admin').maybeSingle().then(r => { if (r.data?.value) { theme = { ...THEME0, ...r.data.value }; applyTheme(theme); } });
+  sb.from('settings').select('value').eq('id', 'theme_shop').maybeSingle().then(r => { if (r.data?.value) shopTheme = { ...shopTheme, ...r.data.value }; });
   if (!me) { await sb.auth.signOut(); return loginView('هذا الحساب غير مصرّح له بدخول المساحة.'); }
   app.innerHTML = `<aside class="side" id="side"></aside><div class="backdrop" id="bd" onclick="toggleSide(false)"></div>
   <div class="content"><header class="top"><button class="ibtn menu-btn" onclick="toggleSide(true)" aria-label="القائمة">${ic('menu')}</button><h1 id="ptitle"></h1><span class="grow"></span><button class="ibtn" id="bell" onclick="go('notifs')" aria-label="التنبيهات"></button><span class="chip">${ic('user')} ${esc(me.name)}</span><button class="ibtn" onclick="signOut()" aria-label="خروج">${ic('log-out')}</button></header><main class="wrap" id="main"></main></div><div class="tabbar" id="nav"></div>`;
@@ -519,7 +542,7 @@ const V = {
     const { data } = await sb.from('pickup_locations').select('*').order('sort_order');
     locMap = Object.fromEntries((data || []).map(x => [x.id, x]));
     return `<h2>مواقع الاستلام</h2><div class="card dash"><div class="grid"><input id="lc_n" placeholder="اسم الموقع"><input id="lc_i" placeholder="وصف أو تعليمات"></div><button class="btn" style="margin-top:10px" onclick="addLoc()">إضافة موقع</button></div>
-    ${(data || []).map(x => `<div class="card"><div class="row"><b class="grow">${esc(x.name)}</b><span class="tag ${x.is_available ? 's-ready' : ''}">${x.is_available ? 'متاح' : 'غير متاح'}</span></div><div class="sub">${esc(x.instructions || '')}</div>
+    ${(data || []).map(x => `<div class="card"><div class="row"><b class="grow">${esc(x.name)}</b><span class="tag ${x.is_available ? 's-ready' : ''}">${x.is_available ? 'متاح' : 'غير متاح'}</span></div><div class="sub">${esc(x.address || '')}</div><div class="sub">${esc(x.instructions || '')}</div>
     <div class="row" style="margin-top:8px"><button class="btn soft sm" onclick="upLoc('${x.id}',{is_available:${!x.is_available}})">${x.is_available ? 'إيقاف' : 'تفعيل'}</button><button class="btn soft sm" onclick="editLoc('${x.id}')">تعديل</button><button class="btn del sm" onclick="delLoc('${x.id}')">حذف</button></div></div>`).join('')}`;
   },
 
@@ -643,13 +666,15 @@ const V = {
   }
 };
 
-V.look = async () => `<h2>مظهر الموقع</h2><div class="sub">اختاري مظهرًا جاهزًا أو عدّلي الألوان بنفسك. يُحفظ تلقائيًا ويظهر لكما معًا على أي جهاز.</div>
+V.look = async () => { const cur = thTarget === 'shop' ? shopTheme : theme; return `<h2>المظهر</h2><div class="sub">اختاري أين يطبَّق المظهر، ثم مظهرًا جاهزًا أو ألوانك الخاصة. يُحفظ تلقائيًا، وموقع العملاء يقرأه مباشرة.</div>
+  <h3 style="margin:14px 0 8px">يطبَّق على</h3><div class="chips seg">${[['admin', 'مساحة بيتالي (الإدارة)'], ['shop', 'موقع العملاء'], ['both', 'الاثنين معًا']].map(([v, l]) => `<button class="${thTarget === v ? 'on' : ''}" onclick="setTarget('${v}')">${l}</button>`).join('')}</div>
   <h3 style="margin:14px 0 8px">مظاهر جاهزة</h3><div class="grid">${Object.entries(THEMES).map(([k, [n, c]]) => `<div class="card click" onclick="setTheme('${k}')"><b>${n}</b><div class="row" style="margin-top:8px">${['primary', 'bg', 'soft', 'text'].map(x => `<i class="sw big" style="background:${c[x]}"></i>`).join('')}</div></div>`).join('')}</div>
-  <h3 style="margin:14px 0 8px">ألوان مخصصة</h3><div class="card"><div class="grid">${[['primary', 'اللون الأساسي (الأزرار والتحديد)'], ['bg', 'لون الخلفية'], ['card', 'لون البطاقات'], ['text', 'لون النص'], ['soft', 'لون التظليل الخفيف'], ['border', 'لون الإطارات']].map(([k, l]) => `<div class="row"><input type="color" value="${theme[k]}" style="width:52px;height:44px;padding:2px" oninput="tSet('${k}',this.value)"><span class="grow">${l}</span></div>`).join('')}</div></div>
-  <h3 style="margin:14px 0 8px">خيارات متقدمة</h3><div class="card"><label class="lb">استدارة الزوايا</label><div class="chips seg">${[[6, 'حادة'], [16, 'متوسطة'], [26, 'دائرية']].map(([v, l]) => `<button class="${theme.radius === v ? 'on' : ''}" onclick="tSet('radius',${v},true)">${l}</button>`).join('')}</div>
-  <label class="lb">حجم الخط</label><div class="chips seg">${[[15, 'صغير'], [16, 'عادي'], [18, 'كبير']].map(([v, l]) => `<button class="${theme.font === v ? 'on' : ''}" onclick="tSet('font',${v},true)">${l}</button>`).join('')}</div>
-  <label class="lb">كثافة الواجهة</label><div class="chips seg"><button class="${!theme.dense ? 'on' : ''}" onclick="tSet('dense',false,true)">مريحة</button><button class="${theme.dense ? 'on' : ''}" onclick="tSet('dense',true,true)">مضغوطة</button></div></div>
-  <button class="btn soft" style="margin-top:12px" onclick="tReset()">${ic('rotate-ccw')} إعادة المظهر الأصلي</button>`;
+  <h3 style="margin:14px 0 8px">ألوان مخصصة</h3><div class="card"><div class="grid">${[['primary', 'اللون الأساسي (الأزرار والتحديد)'], ['bg', 'لون الخلفية'], ['card', 'لون البطاقات'], ['text', 'لون النص'], ['soft', 'لون التظليل الخفيف'], ['border', 'لون الإطارات']].map(([k, l]) => `<div class="row"><input type="color" value="${cur[k]}" style="width:52px;height:44px;padding:2px" oninput="tSet('${k}',this.value)"><span class="grow">${l}</span></div>`).join('')}</div></div>
+  <h3 style="margin:14px 0 8px">خيارات متقدمة</h3><div class="card"><label class="lb">نوع الخط</label><div class="chips seg">${Object.entries(FONTS).map(([k, [n]]) => `<button class="${cur.family === k ? 'on' : ''}" onclick="tSet('family','${k}',true)">${n}</button>`).join('')}</div>
+  <label class="lb">استدارة الزوايا</label><div class="chips seg">${[[6, 'حادة'], [16, 'متوسطة'], [26, 'دائرية']].map(([v, l]) => `<button class="${cur.radius === v ? 'on' : ''}" onclick="tSet('radius',${v},true)">${l}</button>`).join('')}</div>
+  <label class="lb">حجم الخط</label><div class="chips seg">${[[15, 'صغير'], [16, 'عادي'], [18, 'كبير']].map(([v, l]) => `<button class="${cur.font === v ? 'on' : ''}" onclick="tSet('font',${v},true)">${l}</button>`).join('')}</div>
+  <label class="lb">كثافة الواجهة</label><div class="chips seg"><button class="${!cur.dense ? 'on' : ''}" onclick="tSet('dense',false,true)">مريحة</button><button class="${cur.dense ? 'on' : ''}" onclick="tSet('dense',true,true)">مضغوطة</button></div></div>
+  <button class="btn soft" style="margin-top:12px" onclick="tReset()">${ic('rotate-ccw')} إعادة المظهر الأصلي</button>`; };
 for (const h in HUBS) V[h] = async () => tabsBar(h) + await V[HT[h]]();
 
 /* ---------- الإجراءات ---------- */
@@ -805,8 +830,8 @@ function addLoc() { const n = $('#lc_n').value.trim(); if (!n) return toast('ا�
 function upLoc(id, patch) { chk(sb.from('pickup_locations').update(patch).eq('id', id)); }
 function editLoc(id) {
   const x = locMap[id];
-  form({ title: 'تعديل موقع الاستلام', ok: 'حفظ', done: 'تم الحفظ', fields: [{ id: 'n', label: 'اسم الموقع', req: 1, value: x.name }, { id: 'i', label: 'تعليمات للعميل', type: 'textarea', value: x.instructions || '', hint: 'تظهر للعميل في الفاتورة.' }],
-    onSubmit: async v => { const { error } = await sb.from('pickup_locations').update({ name: v.n, instructions: v.i || null }).eq('id', id); if (error) return error.message; } });
+  form({ title: 'تعديل موقع الاستلام', ok: 'حفظ', done: 'تم الحفظ', fields: [{ id: 'n', label: 'اسم الموقع', req: 1, value: x.name }, { id: 'a', label: 'العنوان', type: 'textarea', value: x.address || '', hint: 'يظهر للعميل عند الاختيار وفي الفاتورة.' }, { id: 'm', label: 'رابط خرائط جوجل', value: x.map_url || '', hint: 'افتحي الموقع في خرائط جوجل ثم شاركي الرابط والصقيه هنا.' }, { id: 'la', label: 'خط العرض (لخاصية الأقرب لك)', value: x.lat ?? '' }, { id: 'lo', label: 'خط الطول', value: x.lng ?? '' }, { id: 'i', label: 'تعليمات للعميل', type: 'textarea', value: x.instructions || '', hint: 'تظهر للعميل في الفاتورة.' }],
+    onSubmit: async v => { const n = x => { const t = String(x ?? '').trim().replace(',', '.'); return t === '' || isNaN(+t) ? null : +t; }; const { error } = await sb.from('pickup_locations').update({ name: v.n, instructions: v.i || null, address: v.a || null, map_url: v.m || null, lat: n(v.la), lng: n(v.lo) }).eq('id', id); if (error) return error.message; } });
 }
 async function delLoc(id) { if (await ask('حذف الموقع؟ الطلبات القديمة تحتفظ باسمه.')) chk(sb.from('pickup_locations').delete().eq('id', id)); }
 function addOffer() {
