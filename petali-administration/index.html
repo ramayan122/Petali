@@ -627,8 +627,8 @@ const V = {
           <div class="row" style="margin-top:6px"><input id="gmn_${i}" class="grow" placeholder="اسم اللون المختلط (مثال: وردي وأبيض)"><button class="btn soft sm" onclick="vAddMix(${i})">${ic('plus')} إضافة</button></div><label class="chk" style="margin-top:4px"><input type="checkbox" id="gms_${i}" checked> أحفظه في قائمتي الثابتة</label>`
         : `<div class="row" style="margin-top:10px"><input id="gv_${i}" class="grow" placeholder="مثال: صغير" onkeydown="if(event.key==='Enter')vAddIn(${i})"><button class="btn soft sm" onclick="vAddIn(${i})">${ic('plus')} إضافة</button></div>`}</div>`).join('')}
       <button class="btn soft" onclick="gAdd()">${ic('plus')} إضافة خيار آخر</button>`;
-    const t2 = `<div class="card"><div class="sub" style="margin-bottom:10px">المواد التي تُستخدم لصنع قطعة واحدة. تُخصم تلقائيًا من المخزون عند تأكيد الطلب، وتدخل في حساب التكلفة.</div>
-      ${f.mats.map((m, i) => `<div class="row" style="margin-bottom:8px"><select class="grow" onchange="pf.mats[${i}].item_id=this.value;render()">${invItems.map(x => `<option value="${x.id}" ${x.id === m.item_id ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select>
+    const t2 = `<div class="card"><div class="sub" style="margin-bottom:10px">اختاري الخامة (مثل صوف الربطات) ثم اللون الذي يُخصم منه، فلا تظهر كل الألوان في قائمة واحدة. المواد التي تُستخدم لصنع قطعة واحدة. تُخصم تلقائيًا من المخزون عند تأكيد الطلب، وتدخل في حساب التكلفة.</div>
+      ${f.mats.map((m, i) => `<div class="row" style="margin-bottom:8px">${matPick(m, i)}
         <div class="stp2"><input inputmode="decimal" value="${esc(m.qty)}" oninput="pf.mats[${i}].qty=this.value"><span class="sub" style="padding:0 10px">${esc(uni(m.item_id))}</span></div><button class="ibtn" onclick="pf.mats.splice(${i},1);render()" aria-label="حذف">${ic('x')}</button></div>`).join('') || '<div class="sub">لم تضيفي مواد بعد.</div>'}
       <button class="btn soft" onclick="addMat()">${ic('plus')} إضافة مادة</button></div>`;
     const t3 = `<div class="card"><div class="sub" style="margin-bottom:10px">لا يوجد أجر عمل منفصل: يُحسب سعر القطعة من تكلفة المواد، وتذهب لبيتالي الأكبر من نسبتها من السعر أو تكلفة المواد، والباقي للشريكتين.</div><div class="grid"><div><label class="lb">تكاليف إضافية للقطعة (ر.س)</label><input inputmode="decimal" value="${esc(f.extra_costs)}" oninput="pf.extra_costs=this.value;pcRefresh()"><div class="hint">تغليف، أدوات...</div></div></div></div>
@@ -1067,6 +1067,113 @@ async function mkCont(id) { const x = id ? (await sb.from('mk_content').select('
 /* ---------- تكامل نهائي ---------- */
 TRASH.push(['mk_campaigns', 'حملة تسويق', 'megaphone', r => r.name], ['mk_accounts', 'حساب تسويقي', 'share-2', r => (r.platform || '') + ' ' + (r.handle || '')], ['mk_content', 'محتوى تسويقي', 'share-2', r => r.title]);
 SETS.splice(0, SETS.length, ...SETS.filter(s => !['savings_percent', 'deduct_materials_cost', 'hourly_rate', 'margin_percent', 'wholesale_margin_percent'].includes(s[0])));
+
+V.finance = async () => {
+  await loadFC(); const { B, L, O } = await finData(), LV = live(L);
+  const ONE = ['sum', 'funds', 'part', 'ledger'], TN = { sum: 'الرئيسية', funds: 'أموال بيتالي', part: 'راما ومريم', ledger: 'السجل' };
+  if (!ONE.includes(finTab)) finTab = 'sum';
+  const total = FUNDS.reduce((t, k) => t + B[k], 0), sumP = (k, p) => LV.filter(e => e.kind === k && (e.to_acct === p || e.from_acct === p)).reduce((t, e) => t + n0(e.amount), 0);
+  const settle = (() => { const S = L.__s || []; return S; })();
+  const S = (await sb.from('fin_settlements').select('*').order('created_at', { ascending: false }).limit(100)).data || [], SV = S.filter(s => !s.voided_at);
+  const owe = (c, p) => O.filter(o => o.done && o.collector === c).reduce((t, o) => t + n0(p === 'rama' ? o.rama_amt : o.maryam_amt), 0) - SV.filter(s => s.from_partner === c && s.to_partner === p).reduce((t, s) => t + n0(s.amount), 0) + SV.filter(s => s.from_partner === p && s.to_partner === c).reduce((t, s) => t + n0(s.amount), 0);
+  const net = owe('maryam', 'rama') - owe('rama', 'maryam'), debtor = net > 0 ? 'maryam' : 'rama', creditor = net > 0 ? 'rama' : 'maryam';
+  const settleLine = Math.abs(net) < 1 ? '<div class="sub">لا يوجد مبلغ بين راما ومريم، الحسابات متساوية ✓</div>' : `<div class="row"><span class="grow">${ACCT[debtor]} عندها نقد يخص ${ACCT[creditor]}: <b>${money(Math.abs(net))}</b></span><button class="btn sm" onclick="settleDlg('${debtor}','${creditor}',${Math.abs(net)})">تم التسليم</button></div>`;
+  const mv = e => `<div class="row" style="padding:5px 0;border-top:1px dashed var(--mv-l)"><span class="grow">${KIND[e.kind] || e.kind}<div class="sub">${fdt(e.created_at)}${e.note ? ' · ' + esc(String(e.note).slice(0, 50)) : ''}</div></span><b>${money(e.amount)}</b></div>`;
+  let body = '';
+  if (finTab === 'sum') {
+    body = `<div class="card dash"><div class="sub">أموال بيتالي</div><b style="font-size:1.8rem;color:var(--mv)">${money(total)}</b><div class="sub">${FUNDS.map(k => ACCT[k] + ' ' + Math.round(B[k])).join(' · ')}</div></div>
+    <div class="grid">${PART.map(p => `<div class="card"><div class="sub">رصيد ${ACCT[p]}</div><b style="font-size:1.4rem;color:var(--mv)">${money(B[p])}</b><button class="btn soft sm" style="margin-top:8px" onclick="finOp('withdrawal','${p}')">سحب</button></div>`).join('')}</div>
+    <div class="card">${settleLine}</div>
+    <div class="row" style="flex-wrap:wrap;margin-bottom:10px"><button class="btn soft sm" onclick="finOp('expense')">${ic('minus')} مصروف</button><button class="btn soft sm" onclick="finOp('transfer')">${ic('arrow-left-right')} تحويل بين الصناديق</button><button class="btn soft sm" onclick="finOp('onbehalf')">دفعت عن المشروع</button><button class="btn soft sm" onclick="finCfg()">${ic('settings')} النسب</button></div>
+    <h3>آخر الحركات</h3><div class="card">${LV.slice(0, 6).map(mv).join('') || '<div class="sub">لا توجد حركات بعد. تظهر هنا عند اكتمال أول طلب.</div>'}</div>`;
+  } else if (finTab === 'funds') {
+    const P = (await sb.from('fin_plans').select('*').order('created_at', { ascending: false })).data || [];
+    body = `<div class="sub" style="margin-bottom:8px">من كل طلب تأخذ بيتالي ${FC.petali_pct}% من السعر (أو تكلفة المواد إن كانت أكبر)، ويذهب ${FC.ops_pct}% منها للتشغيل والباقي لرأس المال.</div>
+    ${FUNDS.map(k => `<div class="card"><div class="row"><b class="grow">${ACCT[k]}</b><b style="color:var(--mv)">${money(B[k])}</b></div>${L.filter(e => e.to_acct === k || e.from_acct === k).slice(0, 3).map(e => `<div class="sub">${fdt(e.created_at)} · ${KIND[e.kind] || e.kind} · ${e.to_acct === k ? '+' : '−'}${money(e.amount)}</div>`).join('')}</div>`).join('')}
+    <div class="row" style="flex-wrap:wrap;margin-bottom:10px"><button class="btn soft sm" onclick="finOp('income')">دخل يدوي</button><button class="btn soft sm" onclick="finOp('reimb')">سداد لشريكة</button></div>
+    <div class="card dash"><div class="row"><h3 class="grow">خطط التسوق</h3><button class="btn soft sm" onclick="planAdd()">${ic('plus')} خطة</button></div>${P.map(p => `<div class="row" style="padding:6px 0;border-top:1px dashed var(--mv-l)"><span class="grow ${p.status === 'done' ? 'sub' : ''}">${esc(p.title)} · ${money(p.amount)}${p.status === 'done' ? ' ✓' : ''}</span>${p.status !== 'done' ? `<button class="btn soft sm" onclick="planDone('${p.id}')">تم</button>` : ''}<button class="ibtn" onclick="planDel('${p.id}')" aria-label="حذف">${ic('x')}</button></div>`).join('') || '<div class="sub">لا توجد خطط.</div>'}</div>`;
+  } else if (finTab === 'part') {
+    body = `<div class="card">${settleLine}</div>` + PART.map(p => { const sh = sumP('order_share', p), wd = sumP('withdrawal', p), ob = sumP('paid_on_behalf', p), tin = LV.filter(e => e.kind === 'partner_transfer' && e.to_acct === p).reduce((t, e) => t + n0(e.amount), 0), W = LV.filter(e => e.kind === 'withdrawal' && e.from_acct === p).slice(0, 5);
+      return `<div class="card"><div class="row"><h3 class="grow">${ACCT[p]}</h3><b style="font-size:1.3rem;color:var(--mv)">${money(B[p])}</b></div><div class="sub">الرصيد الحالي (مستحقاتها − سحوباتها)</div>
+      <div class="row" style="margin-top:6px"><span class="grow">مستحقات من الطلبات</span><b>${money(sh)}</b></div><div class="row"><span class="grow">سحبت</span><b>${money(wd)}</b></div>
+      <details style="margin-top:6px"><summary class="sub">تفاصيل أكثر</summary><div class="row"><span class="grow">استلمت من الأخرى</span><b>${money(tin)}</b></div><div class="row"><span class="grow">دفعت عن المشروع</span><b>${money(ob)}</b></div>${W.map(e => `<div class="sub">سحب ${fdt(e.created_at)}: ${money(e.amount)} (قبل ${money(e.balance_before)} ← بعد ${money(e.balance_after)})</div>`).join('')}</details>
+      <div class="row" style="margin-top:8px"><button class="btn sm" onclick="finOp('withdrawal','${p}')">سحب</button></div></div>`; }).join('') +
+      (SV.length ? `<h3 style="margin:10px 0 6px">آخر التسويات</h3><div class="card">${SV.slice(0, 8).map(s => `<div class="sub">${fmtD(s.created_at)} · ${ACCT[s.from_partner]} ← ${ACCT[s.to_partner]} · ${money(s.amount)}</div>`).join('')}</div>` : '');
+  } else {
+    const ons = [...new Set(L.map(e => e.order_id).filter(Boolean))], om = ons.length ? Object.fromEntries(((await sb.from('orders').select('id,order_no').in('id', ons)).data || []).map(o => [o.id, o.order_no])) : {};
+    const rows = L.filter(e => (!lgF.k || e.kind === lgF.k) && (!lgF.a || e.to_acct === lgF.a || e.from_acct === lgF.a));
+    body = `<div class="row" style="flex-wrap:wrap;margin-bottom:8px"><select onchange="lgF.k=this.value;render()"><option value="">كل الأنواع</option>${Object.entries(KIND).filter(([k]) => k !== 'opening').map(([k, v]) => `<option value="${k}" ${lgF.k === k ? 'selected' : ''}>${v}</option>`).join('')}</select><select onchange="lgF.a=this.value;render()"><option value="">كل الحسابات</option>${Object.entries(ACCT).map(([k, v]) => `<option value="${k}" ${lgF.a === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+    ${rows.map(e => `<div class="card" style="${e.voided_at ? 'opacity:.5' : ''}"><div class="row"><b class="grow">${KIND[e.kind] || e.kind}</b><b>${money(e.amount)}</b></div><div class="sub">${fdt(e.created_at)} · ${ACCT[e.from_acct] || e.from_acct} ← ${ACCT[e.to_acct] || e.to_acct}${e.order_id && om[e.order_id] ? ' · طلب ' + esc(om[e.order_id]) : ''}</div>${e.note ? `<div class="sub">${esc(e.note)}</div>` : ''}${e.voided_at ? '<div class="sub">ملغاة</div>' : `<button class="btn soft sm" style="margin-top:4px" onclick="finVoid('${e.id}')">إلغاء</button>`}</div>`).join('') || '<div class="card sub">لا توجد حركات.</div>'}`;
+  }
+  return lkBar() + `<h2>المالية</h2><div class="tabs">${ONE.map(k => `<button class="${finTab === k ? 'on' : ''}" onclick="finTab='${k}';render()">${TN[k]}</button>`).join('')}</div>` + body;
+};
+function finCfg() { form({ title: 'نسب التوزيع', sub: 'حصة بيتالي = الأكبر بين هذه النسبة من السعر وتكلفة المواد. الباقي للشريكتين بأرقام صحيحة والكسور لبيتالي. تسري على الطلبات القادمة.', ok: 'حفظ', done: 'تم الحفظ',
+  fields: [{ id: 'p', type: 'number', label: 'نسبة بيتالي من السعر (%)', value: String(FC.petali_pct), req: 1 }, { id: 'o', type: 'number', label: 'للتشغيل من حصة بيتالي (%) والباقي لرأس المال', value: String(FC.ops_pct), req: 1 }],
+  onSubmit: async v => { const p = n0(v.p), o = n0(v.o); if (p < 0 || p > 100 || o < 0 || o > 100) return 'النسبة بين 0 و100'; FC = { petali_pct: p, ops_pct: o, capital_pct: 100 - o }; const { error } = await sb.from('settings').upsert({ id: 'fin_config', value: FC }); if (error) return error.message; } }); }
+
+/* ---------- القفل: لراما فقط ---------- */
+const isOwner = () => me && me.key === 'rama';
+{ const _l = lockView; lockView = async () => isOwner() ? _l() : `<div class="card" style="max-width:420px;margin:30px auto;text-align:center"><div style="color:var(--mv);transform:scale(2.2);display:inline-block;margin-top:10px">${ic('lock')}</div><h3 style="margin:14px 0 6px">${TITLES[view]} مقفل</h3><div class="sub">هذا القسم حساس، ويفتحه صاحب الصلاحية فقط.</div></div>`; }
+{ const _o = lkOpen; lkOpen = async () => { if (!isOwner()) return; return _o(); }; }
+lkBar = () => isOwner() ? `<div class="row" style="margin-bottom:8px;justify-content:flex-end"><button class="btn soft sm" onclick="pinDlg()">${ic('key')} رمز القفل</button><button class="btn soft sm" onclick="UNL=0;drawNav();render()">${ic('lock')} قفل الآن</button></div>` : '';
+pinDlg = function () {
+  form({ title: 'رمز قفل الأقسام الحساسة', sub: 'رمز خاص بحسابك أنتِ فقط، ولا يفتح به أحد غيرك. لو نسيتِه اكتبي كلمة مرور حسابك لإعادة تعيينه.', ok: 'حفظ الرمز', done: 'تم حفظ الرمز',
+    fields: [...(PINSET ? [{ id: 'o', type: 'password', label: 'الرمز الحالي (أو اتركيه فارغًا واكتبي كلمة المرور)' }] : []), { id: 'pw', type: 'password', label: PINSET ? 'كلمة مرور حسابك (لإعادة التعيين عند نسيان الرمز)' : 'كلمة مرور حسابك (للتأكيد)' }, { id: 'n', type: 'password', label: 'الرمز الجديد (٤ خانات أو أكثر)', req: 1 }],
+    onSubmit: async v => {
+      if (PINSET && v.o) { const { error } = await sb.rpc('pin_set', { p_new: v.n, p_old: v.o }); if (error) return error.message; PINSET = true; return; }
+      if (!v.pw) return 'اكتبي كلمة مرور حسابك للتأكيد';
+      const u = (await sb.auth.getUser()).data.user, a = await sb.auth.signInWithPassword({ email: u.email, password: v.pw }); if (a.error) return 'كلمة المرور غير صحيحة';
+      const { error } = await sb.rpc('pin_reset', { p_new: v.n }); if (error) return error.message; PINSET = true; } });
+};
+
+/* ---------- ملاحظات على العملاء ---------- */
+const pkey = p => String(p || '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/\D/g, '').slice(-9);
+{ const _o2 = V.order; V.order = async id => {
+  const h = await _o2(id); let card = '';
+  try { const o = (await sb.from('orders').select('customer_name,customer_phone').eq('id', id).single()).data, k = pkey(o.customer_phone), N = (await sb.from('customer_notes').select('*').eq('phone_key', k).is('deleted_at', null).order('created_at', { ascending: false })).data || [];
+    card = `<div class="card"><h3>${ic('sticky-note')} ملاحظات على العميل</h3><div class="sub">خاصة بكم، لا يراها العميل، وتظهر في كل طلباته.</div><div class="row" style="margin:8px 0"><input id="cn_t" class="grow" placeholder="مثال: عميلة دائمة، تفضّل الألوان الهادئة"><button class="btn sm" onclick="cnAdd('${id}','${k}','${qa(o.customer_name || '')}')">إضافة</button></div>
+    ${N.map(n => `<div class="row" style="padding:4px 0;border-top:1px dashed var(--mv-l)"><span class="grow">${esc(n.note)}<div class="sub">${fdt(n.created_at)}${staff[n.created_by] ? ' · ' + esc(staff[n.created_by].name) : ''}</div></span><button class="ibtn" onclick="cnDel('${n.id}')" aria-label="حذف">${ic('x')}</button></div>`).join('')}</div>`; } catch (e) {}
+  return h + card; }; }
+async function cnAdd(oid, k, nm) { const t = $('#cn_t').value.trim(); if (!t) return; const { error } = await sb.from('customer_notes').insert({ phone_key: k, customer_name: nm, note: t, order_id: oid }); if (error) return toast(error.message); render(); }
+async function cnDel(id) { await sb.from('customer_notes').update({ deleted_at: new Date().toISOString() }).eq('id', id); render(); }
+TRASH.push(['customer_notes', 'ملاحظة على عميل', 'sticky-note', r => String(r.note || '').slice(0, 60)]);
+
+/* ---------- تنظيف البيانات ---------- */
+const WSEC = [['orders', 'الطلبات (وتنحذف بياناتها المرتبطة)', 'orders', r => (r.order_no || '') + ' · ' + (r.customer_name || '')], ['finance', 'المالية (الدفتر، الشريكتان، الخطط)', null], ['products', 'المنتجات (تُنقل للمحذوفات)', 'products', r => r.name], ['inventory', 'مواد المخزون (تُنقل للمحذوفات)', 'inventory_items', r => r.name],
+  ['marketing', 'التسويق (حملات، حسابات، محتوى)', 'mk_campaigns', r => r.name], ['reviews', 'التقييمات', null], ['notes', 'الملاحظات وملاحظات العملاء', 'notes', r => String(r.body || '').slice(0, 50)], ['calendar', 'الجدول والمواعيد', 'calendar_events', r => r.title], ['chat', 'رسائل الشات', null]];
+const KEEPK = { orders: 'orders', products: 'products', inventory: 'inventory_items', marketing: 'mk_campaigns', notes: 'notes', calendar: 'calendar_events' };
+let WP = { sel: new Set(), keep: {}, redo: true };
+function wipeDlg(all) {
+  if (all) WP.sel = new Set(WSEC.map(x => x[0])); 
+  openM(`<div class="mh"><h3>${all ? 'حذف كل شيء' : 'حذف أقسام محددة'}</h3><button class="ibtn" onclick="closeM()">${ic('x')}</button></div><div class="sub" style="margin-bottom:8px">اختاري الأقسام التي تُحذف بياناتها بالكامل، ولأي قسم يمكنك تحديد عناصر تبقى (استثناءات). نصيحة: نزّلي نسخة كاملة أولًا.</div>
+  ${WSEC.map(([k, l, t]) => `<div class="row" style="padding:6px 0;border-top:1px dashed var(--mv-l)"><label class="chk grow"><input type="checkbox" ${WP.sel.has(k) ? 'checked' : ''} onchange="this.checked?WP.sel.add('${k}'):WP.sel.delete('${k}')"> ${l}</label>${t ? `<button class="btn soft sm" onclick="wipeKeep('${k}')">استثناءات${(WP.keep[k] || []).length ? ' (' + WP.keep[k].length + ')' : ''}</button>` : ''}</div>`).join('')}
+  <label class="chk" style="margin-top:8px"><input type="checkbox" ${WP.redo ? 'checked' : ''} onchange="WP.redo=this.checked"> بعد حذف المالية: أعيدي توزيع الطلبات المكتملة الباقية</label>
+  <div class="row" style="margin-top:12px"><button class="btn del grow" onclick="wipeGo()">${ic('trash-2')} متابعة الحذف</button><button class="btn soft" onclick="closeM()">إلغاء</button></div>`);
+}
+async function wipeKeep(k) {
+  const sec = WSEC.find(x => x[0] === k), { data } = await sb.from(sec[2]).select('*').limit(500); const keep = new Set(WP.keep[k] || []), rows = (data || []).filter(r => !r.deleted_at);
+  openM(`<div class="mh"><h3>الاستثناءات: ${sec[1].split(' (')[0]}</h3><button class="ibtn" onclick="wipeDlg()">${ic('x')}</button></div><div class="sub">العناصر المحددة هنا تبقى ولا تُحذف.</div><div style="max-height:50vh;overflow:auto;margin:8px 0">${rows.map(r => `<label class="chk" style="display:flex;padding:5px 0"><input type="checkbox" ${keep.has(r.id) ? 'checked' : ''} onchange="wipeTog('${k}','${r.id}',this.checked)"> ${esc(sec[3](r))}</label>`).join('') || '<div class="sub">لا توجد عناصر.</div>'}</div><button class="btn" onclick="wipeDlg()">تم</button>`);
+}
+function wipeTog(k, id, on) { const s = new Set(WP.keep[k] || []); on ? s.add(id) : s.delete(id); WP.keep[k] = [...s]; }
+async function wipeGo() {
+  if (!WP.sel.size) return toast('اختاري قسمًا واحدًا على الأقل');
+  const names = WSEC.filter(x => WP.sel.has(x[0])).map(x => x[1].split(' (')[0]).join('، ');
+  openM(`<h3>${ic('alert-triangle')} تأكيد الحذف</h3><p style="margin:10px 0">سيُحذف بالكامل: <b>${esc(names)}</b>. لا يمكن التراجع.</p><div class="sub">اكتبي كلمة <b>حذف</b> للتأكيد</div><input id="wp_c" placeholder="حذف"><div class="err" id="wp_e"></div><div class="row" style="margin-top:10px"><button class="btn del grow" id="wp_ok">حذف نهائي</button><button class="btn soft" onclick="closeM()">إلغاء</button></div>`);
+  $('#wp_ok').onclick = async () => { if ($('#wp_c').value.trim() !== 'حذف') return $('#wp_e').textContent = 'اكتبي كلمة حذف للتأكيد'; $('#wp_ok').disabled = true; $('#wp_ok').textContent = 'جارٍ الحذف...';
+    const keep = {}; Object.entries(KEEPK).forEach(([s, t]) => { if (WP.keep[s]?.length) keep[t] = WP.keep[s]; });
+    const { data, error } = await sb.rpc('admin_wipe', { p_sections: [...WP.sel], p_keep: keep, p_redistribute: WP.redo });
+    if (error) { $('#wp_ok').disabled = false; $('#wp_ok').textContent = 'حذف نهائي'; return $('#wp_e').textContent = ERRM(error.message); }
+    closeM(); WP = { sel: new Set(), keep: {}, redo: true }; toast('تم الحذف', true); await loadInvCats(); render(); };
+}
+{ const _e = V.export; V.export = async () => { const h = await _e(); return h + (isOwner() ? `<div class="card" style="border-color:#c0392b"><h3>${ic('trash-2')} تنظيف البيانات</h3><div class="sub" style="margin-bottom:8px">لإعادة البدء أو تنظيف قسم بعينه. نزّلي نسخة كاملة قبل أي حذف.</div><div class="row" style="flex-wrap:wrap"><button class="btn del" onclick="wipeDlg(true)">حذف كل شيء</button><button class="btn soft" onclick="WP.sel=new Set();wipeDlg()">اختيار أقسام وحذفها</button></div></div>` : ''); }; }
+
+/* ---------- مواد المنتج: الخامة ثم اللون ---------- */
+const matBase = it => { let n = String(it.name || ''); (YC || []).forEach(c => { n = n.split(c.name).join(' '); }); n = n.replace(/[-–—،,()]/g, ' ').replace(/\s+/g, ' ').trim(); return n || String(it.name || ''); };
+const matGroups = () => { const g = {}; invItems.forEach(i => (g[matBase(i)] = g[matBase(i)] || []).push(i)); return g; };
+function matPick(m, i) { const G = matGroups(), cur = invItems.find(x => x.id === m.item_id) || invItems[0] || {}, gk = matBase(cur), L = G[gk] || [cur];
+  return `<div class="grow"><select style="width:100%" onchange="matGrp(${i},this.value)">${Object.entries(G).map(([k, a]) => `<option value="${esc(k)}" ${k === gk ? 'selected' : ''}>${esc(k)}${a.length > 1 ? ' (' + a.length + ' ألوان)' : ''}</option>`).join('')}</select>
+  ${L.length > 1 ? `<select style="width:100%;margin-top:4px" onchange="pf.mats[${i}].item_id=this.value;render()">${L.map(x => `<option value="${x.id}" ${x.id === m.item_id ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select>` : ''}</div>`; }
+function matGrp(i, k) { const a = matGroups()[k]; if (a && a[0]) pf.mats[i].item_id = a[0].id; render(); }
 
 for (const h in HUBS) V[h] = async () => tabsBar(h) + await V[HT[h]]();
 
