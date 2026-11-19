@@ -763,18 +763,18 @@ const V = {
   },
 
   export() {
-    return `<h2>التصدير والنسخ الاحتياطي</h2><div class="card dash">ملفات CSV تُفتح في إكسل، والنسخة الكاملة JSON تحفظ كل شيء. احتفظي بها على جهازك بين فترة وأخرى. لا يتم حذف أو تصفير أي بيانات تلقائيًا؛ الأرشفة عملية منفصلة بعد حفظ نسخة.</div>
+    return `<h2>التصدير والنسخ الاحتياطي</h2><div class="card dash">ملفات CSV تُفتح في إكسل، والنسخة الكاملة JSON تحفظ كل شيء. احتفظي بها على جهازك بين فترة وأخرى.</div>
     <div class="card"><h3>تصدير جدول (CSV)</h3><div class="row">${[['orders', 'الطلبات'], ['order_items', 'بنود الطلبات'], ['finance_entries', 'السجل المالي'], ['products', 'المنتجات'], ['inventory_items', 'المخزون'], ['inventory_movements', 'حركة المخزون'], ['reviews', 'التقييمات']].map(([k, t]) => `<button class="btn soft sm" onclick="exportCsv('${k}')">${t}</button>`).join('')}</div></div>
     <div class="card"><h3>نسخة احتياطية كاملة</h3><button class="btn" onclick="exportAll()">تنزيل نسخة كاملة (JSON)</button></div>`;
   },
 
   async undo() {
     const { data } = await sb.from('audit_log').select('*').order('created_at', { ascending: false }).limit(80);
-    return `<h2>سجل التعديلات</h2><div class="sub" style="margin-bottom:10px">اضغطي "تراجع" لإرجاع الشيء لما كان عليه قبل هذا التعديل.</div>
+    return `<h2>سجل التعديلات</h2>${isOwner() ? `<div class="row" style="margin-bottom:8px"><button class="btn del sm" onclick="logWipe()">${ic('trash-2')} حذف السجل بالكامل</button></div>` : ''}<div class="sub" style="margin-bottom:10px">اضغطي "تراجع" لإرجاع الشيء لما كان عليه قبل هذا التعديل.</div>${isOwner() ? `<button class="btn del sm" style="margin-bottom:10px" onclick="auditDel()">${ic('trash-2')} مسح السجل كله</button>` : ''}
     ${(data || []).map(a => { const d = a.new_data || a.old_data || {}, nm = d.name || d.title || d.customer_name || d.note || d.body || d.order_no || '';
       const ch = a.action === 'UPDATE' ? Object.keys(a.new_data).filter(k => k !== 'updated_at' && JSON.stringify(a.new_data[k]) !== JSON.stringify(a.old_data[k])).map(k => FL[k] || k).join('، ') : '';
       return `<div class="card"><div class="row"><b class="grow">${AL[a.action]} ${TL[a.table_name] || a.table_name}</b><span class="sub">${ago(a.created_at)}</span></div><div>${esc(String(nm).slice(0, 60))}</div>
-      <div class="sub">${esc(staff[a.actor]?.name || 'العميل أو النظام')}${ch ? ' · ' + esc(ch) : ''}</div><button class="btn soft sm" style="margin-top:6px" onclick="undoAudit(${a.id})">تراجع</button></div>`; }).join('') || '<div class="card sub empty">لا توجد تعديلات مسجلة.</div>'}`;
+      <div class="sub">${esc(staff[a.actor]?.name || 'العميل أو النظام')}${ch ? ' · ' + esc(ch) : ''}</div><div class="row" style="margin-top:6px"><button class="btn soft sm" onclick="undoAudit(${a.id})">تراجع</button>${isOwner() ? `<button class="btn del sm" onclick="auditDel(${a.id})">حذف من السجل</button>` : ''}</div></div>`; }).join('') || '<div class="card sub empty">لا توجد تعديلات مسجلة.</div>'}`;
   },
 
   async settings() {
@@ -1126,6 +1126,7 @@ pinDlg = function () {
       const { error } = await sb.rpc('pin_reset', { p_new: v.n }); if (error) return error.message; PINSET = true; } });
 };
 
+async function logWipe() { if (!await ask('حذف سجل التعديلات بالكامل؟ لن تقدري على "التراجع" عن التعديلات السابقة بعدها.')) return; const { error } = await sb.rpc('admin_wipe', { p_sections: ['log'], p_keep: {}, p_redistribute: false }); if (error) return toast(ERRM(error.message)); toast('تم حذف السجل', true); render(); }
 /* ---------- ملاحظات على العملاء ---------- */
 const pkey = p => String(p || '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/\D/g, '').slice(-9);
 { const _o2 = V.order; V.order = async id => {
@@ -1138,9 +1139,10 @@ async function cnAdd(oid, k, nm) { const t = $('#cn_t').value.trim(); if (!t) re
 async function cnDel(id) { await sb.from('customer_notes').update({ deleted_at: new Date().toISOString() }).eq('id', id); render(); }
 TRASH.push(['customer_notes', 'ملاحظة على عميل', 'sticky-note', r => String(r.note || '').slice(0, 60)]);
 
+async function auditDel(id) { if (!await ask(id ? 'حذف هذا السطر من السجل؟' : 'مسح سجل التعديلات كله؟ لا يمكن التراجع.')) return; const { error } = await sb.rpc('audit_clear', { p_ids: id ? [id] : null }); if (error) return toast(error.message); toast('تم الحذف', true); render(); }
 /* ---------- تنظيف البيانات ---------- */
 const WSEC = [['orders', 'الطلبات (وتنحذف بياناتها المرتبطة)', 'orders', r => (r.order_no || '') + ' · ' + (r.customer_name || '')], ['finance', 'المالية (الدفتر، الشريكتان، الخطط)', null], ['products', 'المنتجات (تُنقل للمحذوفات)', 'products', r => r.name], ['inventory', 'مواد المخزون (تُنقل للمحذوفات)', 'inventory_items', r => r.name],
-  ['marketing', 'التسويق (حملات، حسابات، محتوى)', 'mk_campaigns', r => r.name], ['reviews', 'التقييمات', null], ['notes', 'الملاحظات وملاحظات العملاء', 'notes', r => String(r.body || '').slice(0, 50)], ['calendar', 'الجدول والمواعيد', 'calendar_events', r => r.title], ['chat', 'رسائل الشات', null]];
+  ['marketing', 'التسويق (حملات، حسابات، محتوى)', 'mk_campaigns', r => r.name], ['reviews', 'التقييمات', null], ['notes', 'الملاحظات وملاحظات العملاء', 'notes', r => String(r.body || '').slice(0, 50)], ['calendar', 'الجدول والمواعيد', 'calendar_events', r => r.title], ['chat', 'رسائل الشات', null], ['log', 'سجل التعديلات', null]];
 const KEEPK = { orders: 'orders', products: 'products', inventory: 'inventory_items', marketing: 'mk_campaigns', notes: 'notes', calendar: 'calendar_events' };
 let WP = { sel: new Set(), keep: {}, redo: true };
 function wipeDlg(all) {
