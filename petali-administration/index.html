@@ -5,8 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>مساحة بيتالي</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Cairo:wght@400;600;700&family=Almarai:wght@400;700&family=Readex+Pro:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
 :root{--mv:#A86B9E;--mv-l:#E8D5E5;--pk:#F4DDE5;--pe:#F7E1D7;--bg:#FFF9F4;--card:#FFFCFA;--tx:#554852;--tx2:#9A8C96;--ok:#7FA38A;--warn:#C9776B}
@@ -98,7 +97,7 @@ body{padding:0 0 calc(72px + env(safe-area-inset-bottom))}
 .actcard{border:2px solid var(--mv)}details.card summary{cursor:pointer;font-weight:700}
 .fsec{font-weight:700;margin:16px 0 2px;color:var(--mv);font-size:.92rem;border-bottom:1px dashed var(--mv-l);padding-bottom:4px}
 .chips{display:flex;flex-wrap:wrap;gap:8px}.chips button{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border:1.5px solid var(--mv-l);border-radius:12px;background:var(--card);cursor:pointer;color:var(--tx)}.chips button.on{background:var(--mv);border-color:var(--mv);color:var(--onmv,#fff)}
-.chips.seg{gap:0}.chips.seg button{border-radius:0;flex:1}.chips.seg button:first-child{border-radius:12px 0 0 12px}.chips.seg button:last-child{border-radius:0 12px 12px 0}
+.chips.seg{gap:6px}.chips.seg button{border-radius:12px;flex:1 1 auto}
 .sws{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:6px}.sw2{width:34px;height:34px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--mv-l);cursor:pointer;padding:0;display:inline-grid;place-items:center}.sw2.on{box-shadow:0 0 0 3px var(--mv)}
 .sw2.cust{background:conic-gradient(red,yellow,lime,aqua,blue,magenta,red);position:relative;overflow:hidden;color:#fff}.sw2.cust input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .chipx{border:0;background:none;color:var(--tx2);cursor:pointer;text-decoration:underline}
@@ -136,8 +135,8 @@ html,body{font-size:var(--fs,16px)}.card{border-radius:var(--r,16px);padding:var
 <script>
 /* ===== إعدادات: ضعي هنا الرابط والمفتاح العام (anon) فقط. لا تضعي أي مفتاح سري. ===== */
 const CFG = {
-  url: 'https://jkcxbnfdhjtlzmjwglor.supabase.co',
-  key: 'sb_publishable_hmMy7AFAoHvgxFiMHJ7U2w_f2Bm_L_T',
+  url: 'https://hsxtaxwcdowrqptnfpld.supabase.co',
+  key: 'sb_publishable_NorWIu10q6HfvOIIY94SiA_sAbGWuED',
   logo: 'petali-logo.png',
   accounts: { rama: { name: 'راما', email: 'ymana6707@gmail.com' }, maryam: { name: 'مريم', email: 'uuu16889@gmail.com' } }
 };
@@ -247,12 +246,12 @@ const ic = n => `<svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="cur
 const icons = () => {};
 const NAV = [
   ['الأقسام التشغيلية', [['home','home','الرئيسية'],['orders','clipboard-list','الطلبات'],['products','shopping-bag','المنتجات'],['ready','package','المنتجات الجاهزة'],['inventory','boxes','المشتريات والمواد'],['finance','wallet','المالية'],['stats','bar-chart-3','الإحصاءات'],['calendar','calendar','الجدول'],['notes','sticky-note','الملاحظات'],['chat','message-circle','الشات']]],
-  ['أقسام المتجر', [['offers','tag','العروض والخصومات'],['reviews','star','التقييمات'],['locations','map-pin','مواقع الاستلام'],['counters','users','عدادات الموقع']]],
+  ['أقسام المتجر', [['offers','tag','العروض والخصومات'],['reviews','star','التقييمات'],['locations','map-pin','مواقع الاستلام'],['counters','users','عدادات الموقع'],['custom','palette','تخصيص المتجر']]],
   ['الأقسام الإدارية', [['look','palette','المظهر'],['settings','settings','الإعدادات العامة'],['export','download','التصدير'],['trash','trash-2','السجل والمحذوفات']]]
 ];
 const HUBS = {}, HT = {}, HUB_OF = {};
 const GRP = { order:'orders', neworder:'orders', product:'products', ready:'products', undo:'trash', notifs:'' };
-const TITLES = { home:'الرئيسية', orders:'الطلبات', products:'المنتجات', inventory:'المشتريات والمواد', ready:'المنتجات الجاهزة', finance:'المالية', stats:'الإحصاءات', calendar:'الجدول', notes:'الملاحظات', chat:'الشات', offers:'العروض والخصومات', reviews:'التقييمات', locations:'مواقع الاستلام', counters:'عدادات الموقع', look:'المظهر', settings:'الإعدادات العامة', export:'التصدير', trash:'السجل والمحذوفات', undo:'سجل التعديلات', notifs:'التنبيهات', order:'تفاصيل الطلب', neworder:'طلب جديد', product:'المنتج' };
+const TITLES = { custom:'تخصيص المتجر', home:'الرئيسية', orders:'الطلبات', products:'المنتجات', inventory:'المشتريات والمواد', ready:'المنتجات الجاهزة', finance:'المالية', stats:'الإحصاءات', calendar:'الجدول', notes:'الملاحظات', chat:'الشات', offers:'العروض والخصومات', reviews:'التقييمات', locations:'مواقع الاستلام', counters:'عدادات الموقع', look:'المظهر', settings:'الإعدادات العامة', export:'التصدير', trash:'السجل والمحذوفات', undo:'سجل التعديلات', notifs:'التنبيهات', order:'تفاصيل الطلب', neworder:'طلب جديد', product:'المنتج' };
 const STU = { new:'جديد', final_confirmed:'مؤكد', in_progress:'قيد التنفيذ', ready:'جاهز للاستلام', completed:'مكتمل', cancelled:'ملغي' };
 const NEXT = { new:['final_confirmed','تأكيد الطلب','check-circle-2'], awaiting_confirmation:['final_confirmed','تأكيد الطلب','check-circle-2'], final_confirmed:['in_progress','بدء التنفيذ','play'], in_progress:['ready','جاهز للاستلام','package'], ready:['completed','تم التسليم','check'] };
 const fmtD = d => new Date(d).toLocaleDateString('ar-u-ca-gregory-nu-latn', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -273,6 +272,9 @@ let COLORS = [['أبيض','#FFFFFF'],['كريمي','#F5EBDD'],['بيج','#D9C3A5
 const PAYERS = [['ops', 'تشغيل بيتالي'], ['shopping', 'التسوق الفعلي'], ['capital', 'رأس المال'], ['rama', 'راما (من مالها)'], ['maryam', 'مريم (من مالها)']];
 const UNITS = ['كرة','متر','قطعة','علبة','كيس','رول','لفة'];
 let pfTab = 0;
+const FURL = { plex:'IBM+Plex+Sans+Arabic:wght@400;500;700', cairo:'Cairo:wght@400;600;700', almarai:'Almarai:wght@400;700', readex:'Readex+Pro:wght@400;500;600' };
+function loadFont(k) { if (!FURL[k] || document.getElementById('fnt_' + k)) return; const l = document.createElement('link'); l.id = 'fnt_' + k; l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=' + FURL[k] + '&display=swap'; document.head.appendChild(l); }
+let _chartP = null; const needChart = () => window.Chart ? Promise.resolve() : (_chartP = _chartP || new Promise(r => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js'; s.onload = r; s.onerror = r; document.head.appendChild(s); }));
 const FONTS = { tajawal:['تجوال','Tajawal'], plex:['آي بي إم بلكس','"IBM Plex Sans Arabic"'], cairo:['القاهرة','Cairo'], almarai:['المراعي','Almarai'], readex:['ريديكس','"Readex Pro"'] };
 const THEMES = {
   sage:['الأخضر والخوخي',{primary:'#5C7F6A',bg:'#FFF9F4',card:'#FFFCFA',text:'#554852',soft:'#F3E9E1',border:'#E6D9CE'}],
@@ -296,7 +298,7 @@ const lum = h => { const c = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) 
 function applyTheme(t) {
   const r = document.documentElement.style, set = (k, v) => r.setProperty(k, v);
   set('--mv', t.primary); set('--bg', t.bg); set('--card', t.card); set('--tx', t.text); set('--pe', t.soft); set('--pk', t.soft); set('--mv-l', t.border);
-  set('--tx2', `color-mix(in srgb, ${t.text} 58%, ${t.bg})`); set('--onmv', lum(t.primary) > .45 ? '#1f1f1f' : '#ffffff'); set('--ff', (FONTS[t.family] || FONTS.tajawal)[1]); set('--r', t.radius + 'px'); set('--fs', t.font + 'px'); set('--pad', t.dense ? '10px' : '14px');
+  set('--tx2', `color-mix(in srgb, ${t.text} 58%, ${t.bg})`); set('--onmv', lum(t.primary) > .45 ? '#1f1f1f' : '#ffffff'); loadFont(t.family); set('--ff', (FONTS[t.family] || FONTS.tajawal)[1]); set('--r', t.radius + 'px'); set('--fs', t.font + 'px'); set('--pad', t.dense ? '10px' : '14px');
   try { localStorage.setItem('petali_theme', JSON.stringify(t)); } catch (e) {}
 }
 const okHex = h => /^#[0-9a-f]{6}$/i.test(h || '');
@@ -426,6 +428,7 @@ async function boot() {
   const got = await Promise.race([sb.auth.getSession(), new Promise(r => setTimeout(() => r(null), 7000))]), session = got && got.data ? got.data.session : null;
   if (!got) { try { Object.keys(localStorage).filter(k => k.startsWith('sb-')).forEach(k => localStorage.removeItem(k)); } catch (e) {} }
   if (!session) return loginView();
+  sb.rpc('generate_due_alerts'); loadColors(); loadInvCats(); loadFC(); countUnread();
   const { data } = await sb.from('staff').select('id,key,name');
   (data || []).forEach(s => staff[s.id] = s);
   me = staff[session.user.id];
@@ -434,14 +437,14 @@ async function boot() {
   if (!me) { await sb.auth.signOut(); return loginView('هذا الحساب غير مصرّح له بدخول المساحة.'); }
   app.innerHTML = `<aside class="side" id="side"></aside><div class="backdrop" id="bd" onclick="toggleSide(false)"></div>
   <div class="content"><header class="top"><button class="ibtn menu-btn" onclick="toggleSide(true)" aria-label="القائمة">${ic('menu')}</button><h1 id="ptitle"></h1><span class="grow"></span><button class="ibtn" id="bell" onclick="go('notifs')" aria-label="التنبيهات"></button><span class="chip">${ic('user')} ${esc(me.name)}</span><button class="ibtn" onclick="signOut()" aria-label="خروج">${ic('log-out')}</button></header><main class="wrap" id="main"></main></div><div class="tabbar" id="nav"></div>`;
-  sb.rpc('generate_due_alerts');
-  await loadColors(); loadInvCats(); loadFC(); await countUnread(); realtime(); window.__ok = true; go('home');
+  realtime(); window.__ok = true; go('home');
 }
 async function countUnread() {
   const { count } = await sb.from('notifications').select('id', { count: 'exact', head: true }).is('read_at', null);
   unread = count || 0; drawNav();
 }
 function drawNav() {
+  if (!$('#side')) return;
   const cur = GRP[view] ?? view;
   $('#side').innerHTML = `<div class="sb-h">${logo()}<b class="brand">مساحة بيتالي</b></div>` + NAV.map(([t, items]) => `${t ? `<div class="gt">${t}</div>` : ''}${items.map(([k, i, l]) => `<button class="si ${cur === k ? 'on' : ''}" onclick="go('${k}')">${ic(LK.has(k) && !isUnl() ? 'lock' : i)}<span>${l}</span></button>`).join('')}`).join('');
   const tabs = [['home', 'home', 'الرئيسية'], ['orders', 'clipboard-list', 'الطلبات'], ['products', 'shopping-bag', 'المنتجات'], ['inventory', 'boxes', 'المشتريات']];
@@ -558,8 +561,8 @@ const V = {
     const t3 = `<div class="card"><div class="sub" style="margin-bottom:10px">لا يوجد أجر عمل منفصل: يُحسب سعر القطعة من تكلفة المواد، وتذهب لبيتالي الأكبر من نسبتها من السعر أو تكلفة المواد، والباقي للشريكتين.</div><div class="grid"><div><label class="lb">تكاليف إضافية للقطعة (ر.س)</label><input inputmode="decimal" value="${esc(f.extra_costs)}" oninput="pf.extra_costs=this.value;pcRefresh()"><div class="hint">تغليف، أدوات...</div></div></div></div>
       <div id="pcres">${pcHtml()}</div>
       <div class="card"><h3>3 · السعر المعتمد للعميل</h3><div class="grid"><div><label class="lb">سعر القطعة (ر.س)</label><input id="pf_price" inputmode="decimal" value="${esc(f.price)}" oninput="pf.price=this.value;pcRefresh()"></div>
-      <div><label class="lb">سعر الجملة (اختياري)</label><input id="pf_wprice" inputmode="decimal" value="${esc(f.wholesale_price)}" oninput="pf.wholesale_price=this.value"></div>
-      <div><label class="lb">تبدأ الجملة من كمية</label><input inputmode="numeric" value="${esc(f.wholesale_min_qty)}" oninput="pf.wholesale_min_qty=this.value"></div></div></div>`;
+      <div><label class="lb">سعر الجملة (اختياري)</label><input id="pf_wprice" inputmode="decimal" value="${esc(f.wholesale_price)}" oninput="pf.wholesale_price=this.value;pcRefresh()"></div>
+      <div><label class="lb">تبدأ الجملة من كمية</label><input inputmode="numeric" value="${esc(f.wholesale_min_qty)}" oninput="pf.wholesale_min_qty=this.value;pcRefresh()"></div></div></div>`;
     return `<button class="btn soft sm" onclick="go('products')">${ic('arrow-right')} المنتجات</button><h2 style="margin:10px 0">${f.id ? 'تعديل المنتج' : 'منتج جديد'}</h2>
     <div class="tabs">${steps.map((t, i) => `<button class="${pfTab === i ? 'on' : ''}" onclick="pfTab=${i};render()">${i + 1} · ${t}</button>`).join('')}</div>${[t0, t1, t2, t3][pfTab]}
     <div class="stickybar">${pfTab > 0 ? `<button class="btn soft" onclick="pfTab--;render()">السابق</button>` : ''}${pfTab < 3 ? `<button class="btn soft" onclick="pfTab++;render()">التالي</button>` : ''}<button class="btn grow" onclick="saveProduct()">${ic('save')} حفظ المنتج</button>${f.id ? `<button class="btn del" onclick="delProduct()" aria-label="حذف">${ic('trash-2')}</button>` : ''}</div>`;
@@ -636,7 +639,8 @@ const V = {
     const TP = top(prods), TC = top(cols), G = Object.keys(grow).sort();
     const stC = {}; O.forEach(x => { const k = x.status === 'awaiting_confirmation' ? 'new' : x.status; stC[k] = (stC[k] || 0) + 1; });
     const SE = [['over', 'نظرة عامة'], ['sales', 'المبيعات'], ['prod', 'المنتجات'], ['col', 'الألوان'], ['team', 'الفريق'], ['ord', 'حالة الطلبات']];
-    post = () => {
+    post = async () => {
+      await needChart(); if (!window.Chart) return;
       Chart.defaults.font.family = 'Tajawal'; const col = getComputedStyle(document.documentElement).getPropertyValue('--mv').trim() || '#5C7F6A', lg = { legend: { display: false } },
         ax = t => ({ title: { display: true, text: t }, beginAtZero: true, ticks: { precision: 0 } }), mk = (id, c) => { const el = $('#' + id); if (el) new Chart(el, c); };
       mk('c_g', { type: 'line', data: { labels: G, datasets: [{ data: G.map(k => grow[k]), borderColor: col, backgroundColor: col + '22', fill: true, tension: .3 }] }, options: { plugins: lg, scales: { x: { reverse: true, title: { display: true, text: 'التاريخ' } }, y: ax('المبيعات (ر.س)') } } });
@@ -914,7 +918,7 @@ function pcHtml() {
   const d = fdist(P, c.M, 50), min = Math.ceil(c.M / (1 - FC.petali_pct / 100) + c.ex);
   return `<div class="card"><h3>1 · تكلفة المواد للقطعة</h3>${c.mats.map(m => row(`${esc(m.name)}: ${m.q} ${esc(m.unit)} × ${money(m.c)}`, money(m.t))).join('') || '<div class="sub">لم تضيفي مواد (تبويب "المواد").</div>'}${row('إجمالي المواد', money(c.M), 1)}
   ${c.M ? `<div class="sub">سعر مقترح لا يقل عنه: ${money(min)} (يغطي المواد ويحفظ حصة بيتالي ${FC.petali_pct}%)</div><button class="btn sm" style="margin-top:6px" onclick="pcUse('price',${min})">اعتماد المقترح</button>` : ''}</div>
-  ${P > 0 ? `<div class="card"><h3>معاينة توزيع سعر ${money(P)}</h3>${row('حصة بيتالي (الأكبر من ' + FC.petali_pct + '% أو المواد)', money(d.ps))}${row('تشغيل بيتالي (' + FC.ops_pct + '%)', money(Math.round(d.ps * FC.ops_pct) / 100))}${row('رأس المال (' + FC.capital_pct + '%)', money(d.ps - Math.round(d.ps * FC.ops_pct) / 100))}${row('راما (نصف)', money(d.ra))}${row('مريم (نصف)', money(d.ma))}${row('فائض تقريب لبيتالي', money(d.sr))}<div class="hint">لا يوجد أجر عمل منفصل. التوزيع الفعلي عند اكتمال الطلب.</div></div>` : ''}`;
+  ${distCard(P, 'سعر القطعة')}${n0(pf.wholesale_price) > 0 ? distCard(n0(pf.wholesale_price), 'سعر الجملة' + (n0(pf.wholesale_min_qty) ? ' (من ' + n0(pf.wholesale_min_qty) + ' قطعة)' : '')) : ''}`;
 }
 
 /* ---------- المخزون الجاهز للمنتجات ---------- */
@@ -1047,10 +1051,18 @@ async function logWipe() { if (!await ask('حذف سجل التعديلات با
 const pkey = p => String(p || '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/\D/g, '').slice(-9);
 { const _o2 = V.order; V.order = async id => {
   const h = await _o2(id); let card = '';
-  try { const o = (await sb.from('orders').select('customer_name,customer_phone').eq('id', id).single()).data, k = pkey(o.customer_phone), N = (await sb.from('customer_notes').select('*').eq('phone_key', k).is('deleted_at', null).order('created_at', { ascending: false })).data || [];
-    card = `<div class="card"><h3>${ic('sticky-note')} ملاحظات على العميل</h3><div class="sub">خاصة بكم، لا يراها العميل، وتظهر في كل طلباته.</div><div class="row" style="margin:8px 0"><input id="cn_t" class="grow" placeholder="مثال: عميلة دائمة، تفضّل الألوان الهادئة"><button class="btn sm" onclick="cnAdd('${id}','${k}','${qa(o.customer_name || '')}')">إضافة</button></div>
+  try { const o = (await sb.from('orders').select('customer_name,customer_phone,order_no,created_at,pickup_location_name,is_wholesale,source').eq('id', id).single()).data, k = pkey(o.customer_phone), N = (await sb.from('customer_notes').select('*').eq('phone_key', k).is('deleted_at', null).order('created_at', { ascending: false })).data || [];
+    card = onoCard(o) + `<div class="card"><h3>${ic('sticky-note')} ملاحظات على العميل</h3><div class="sub">خاصة بكم، لا يراها العميل، وتظهر في كل طلباته.</div><div class="row" style="margin:8px 0"><input id="cn_t" class="grow" placeholder="مثال: عميلة دائمة، تفضّل الألوان الهادئة"><button class="btn sm" onclick="cnAdd('${id}','${k}','${qa(o.customer_name || '')}')">إضافة</button></div>
     ${N.map(n => `<div class="row" style="padding:4px 0;border-top:1px dashed var(--mv-l)"><span class="grow">${esc(n.note)}<div class="sub">${fdt(n.created_at)}${staff[n.created_by] ? ' · ' + esc(staff[n.created_by].name) : ''}</div></span><button class="ibtn" onclick="cnDel('${n.id}')" aria-label="حذف">${ic('x')}</button></div>`).join('')}</div>`; } catch (e) {}
   return h + card; }; }
+function onoCard(o) {
+  const m = /^(.+)-(\d{2})(\d{2})(\d{2})-([RMX])(\d+)(W?)-(\d)$/.exec(o.order_no || ''); if (!m) return '';
+  const [, , yy, mm, dd, L, n, W, c] = m, sum = ([yy, mm, dd].join('') + String(n).padStart(2, '0')).split('').reduce((t, x) => t + (+x), 0) % 10, okc = sum === +c;
+  const loc = { R: 'موقع راما', M: 'موقع مريم', X: 'غير محدد' }[L], row = (l, v) => `<div class="row" style="padding:4px 0;border-top:1px dashed var(--mv-l)"><span class="grow sub">${l}</span><b>${v}</b></div>`;
+  return `<details class="card"><summary><b>${ic('hash')} معلومات رقم الطلب</b> <span class="sub" dir="ltr">${esc(o.order_no)}</span></summary>
+  ${row('تاريخ الطلب', '20' + yy + '/' + mm + '/' + dd)}${row('وقت الإنشاء', fdt(o.created_at))}${row('موقع الاستلام', loc + (o.pickup_location_name ? ' · ' + esc(o.pickup_location_name) : ''))}${row('ترتيبه في اليوم', 'الطلب رقم ' + (+n))}${row('النوع', W ? 'جملة' : 'مفرّق')}${row('المصدر', o.source === 'shop' ? 'موقع العملاء' : 'أُنشئ من الإدارة')}${row('رمز التحقق', c + (okc ? ' ✓ سليم' : ' ✗ لا يطابق'))}
+  <div class="hint">الصيغة: البادئة - التاريخ(سنة شهر يوم) - حرف الموقع + ترتيب اليوم (+W للجملة) - رمز التحقق.</div></details>`;
+}
 async function cnAdd(oid, k, nm) { const t = $('#cn_t').value.trim(); if (!t) return; const { error } = await sb.from('customer_notes').insert({ phone_key: k, customer_name: nm, note: t, order_id: oid }); if (error) return toast(error.message); render(); }
 async function cnDel(id) { await sb.from('customer_notes').update({ deleted_at: new Date().toISOString() }).eq('id', id); render(); }
 TRASH.push(['customer_notes', 'ملاحظة على عميل', 'sticky-note', r => String(r.note || '').slice(0, 60)]);
@@ -1138,7 +1150,8 @@ function finOp(kind, pre) {
       const { error } = await fpost(c[0], v.a, c[1], c[2], v.n, c[3]); if (error) return error.message; } });
 }
 
-function finCfg() {
+function finCfg() { askUnlock(finCfg2); }
+function finCfg2() {
   const f = (id, label, k) => ({ id, type: 'number', label, value: String(FC[k] ?? 0), req: 1 });
   form({ title: 'نسب التوزيع', sub: 'المنفذة تأخذ نسبتها من سعر القطعة فور اكتمال الطلب. الباقي يتجمع أسبوعيًا ويُقسَّم يوم الإغلاق حسب هذه النسب، وبيتالي = الباقي (مع فائض التقريب). تسري من الإغلاق القادم.', ok: 'حفظ', done: 'تم الحفظ',
     fields: [f('m', 'نسبة المنفذة من سعر القطعة (%)', 'maker_pct'), f('p', 'راما ومريم (بالتساوي) من الباقي (%)', 'partners_pct'), f('e', 'الطوارئ (%)', 'emergency_pct'), f('k', 'التسويق (%)', 'marketing_pct'), f('d', 'التطوير (%)', 'dev_pct'), { id: 'x', type: 'number', label: 'أعلى مبلغ للسلفة الواحدة (0 = بلا حد)', value: String(FC.advance_max || 0) }],
@@ -1163,6 +1176,7 @@ V.finance = async () => {
     <div class="card click" onclick="finTab2='week';render()"><div class="row"><div class="grow"><div class="sub">أرباح الأسبوع الجارية (تُوزَّع يوم الإغلاق)</div><b style="font-size:1.3rem;color:var(--mv)">${money(B.pool || 0)}</b></div><span class="tag">${monTxt()}</span></div></div>
     <div class="grid">${PART.map(p => `<div class="card"><h3>${PNM[p]}</h3><div class="row"><span class="grow sub">الراتب</span><b>${money(B[p] || 0)}</b>${wd(p)}</div><div class="row"><span class="grow sub">محفظة التنفيذ</span><b>${money(B[p + '_w'] || 0)}</b>${wd(p + '_w')}</div></div>`).join('')}</div>
     <div class="card">${xferTxt(xf)}</div>
+    ${isOwner() ? `<div class="card"><div class="row"><div class="grow"><b>نسب التوزيع</b><div class="sub">المنفذة ${FC.maker_pct}% · الشريكتان ${FC.partners_pct}% · الطوارئ ${FC.emergency_pct}% · التسويق ${FC.marketing_pct}% · التطوير ${FC.dev_pct}% · بيتالي الباقي</div></div><button class="btn soft sm" onclick="askUnlock(finCfg)">${ic('lock')} تعديل بالرمز</button></div></div>` : ''}
     <div class="row" style="flex-wrap:wrap;margin-bottom:10px"><button class="btn soft sm" onclick="finOp('expense')">${ic('minus')} مصروف</button><button class="btn soft sm" onclick="finOp('transfer')">${ic('arrow-left-right')} تحويل بين الصناديق</button><button class="btn soft sm" onclick="askUnlock(finCfg)">${ic('settings')} النسب</button></div>
     <h3>آخر الحركات</h3><div class="card">${LV.slice(0, 6).map(mv).join('') || '<div class="sub">لا توجد حركات بعد.</div>'}</div>`;
   } else if (finTab2 === 'week') {
@@ -1205,6 +1219,12 @@ function advDlg() { form({ title: 'طلب سلفة طارئة', sub: 'تحتاج
   onSubmit: async v => { const { error } = await sb.rpc('fin_advance_request', { p_amount: n0(v.a), p_target: v.t, p_reason: v.r }); if (error) return error.message; } }); }
 async function advDecide(id, ok) { if (!await ask(ok ? 'الموافقة على السلفة؟' : 'رفض السلفة؟')) return; const { error } = await sb.rpc('fin_advance_decide', { p_id: id, p_ok: ok }); if (error) return toast(error.message); toast(ok ? 'تمت الموافقة' : 'تم الرفض', true); render(); }
 
+function distCard(P, lbl) {
+  if (!(P > 0)) return '';
+  const row = (l, v, b) => `<div class="row" style="padding:5px 0;${b ? 'border-top:1.5px solid var(--mv-l);margin-top:4px;font-weight:700' : ''}"><span class="grow">${l}</span><span>${v}</span></div>`;
+  const mk = Math.floor(P * FC.maker_pct / 100), pool = P - mk, s = poolSplit(pool), pet = s.ops;
+  return `<div class="card"><h3>إذا انباعت بـ ${lbl}: ${money(P)}</h3>${row('المنفذة فور اكتمال الطلب (' + FC.maker_pct + '%)', money(mk))}${row('تتجمع كأرباح الأسبوع', money(pool))}${row('راما (نصف ' + FC.partners_pct + '%)', money(s.sal))}${row('مريم', money(s.sal))}${row('الطوارئ ' + FC.emergency_pct + '%', money(s.em))}${row('التسويق ' + FC.marketing_pct + '%', money(s.mk))}${row('التطوير ' + FC.dev_pct + '%', money(s.dv))}${row('بيتالي (الباقي + التقريب)', money(pet), 1)}<div class="hint">التوزيع الفعلي عند إغلاق الأسبوع، والتقريب لصالح بيتالي.</div></div>`;
+}
 /* ---------- تسعير: معاينة النموذج الجديد ---------- */
 function pcHtml() {
   const c = pcCalc(), P = n0(pf.price), row = (l, v, b) => `<div class="row" style="padding:5px 0;${b ? 'border-top:1.5px solid var(--mv-l);margin-top:4px;font-weight:700' : ''}"><span class="grow">${l}</span><span>${v}</span></div>`;
@@ -1230,7 +1250,7 @@ async function homeEss() {
   <div class="card" style="padding:10px"><div class="sub">حالة المتجر</div><b style="color:${S.closed ? '#c0392b' : 'var(--mv)'}">${S.closed ? 'مغلق مؤقتًا' : 'مفتوح'}</b>${S.closed && S.reason_admin ? `<div class="sub">${esc(S.reason_admin)}</div>` : ''}<div style="margin-top:6px">${S.closed ? '<button class="btn soft sm" onclick="shopOpen()">فتح المتجر</button>' : '<button class="btn soft sm" onclick="shopClose()">إغلاق مؤقت</button>'}</div></div></div>
   ${needBk ? `<div class="card" style="padding:10px"><div class="row"><span class="grow">${lb ? 'مضى أكثر من أسبوع على آخر نسخة احتياطية' : 'لم تنزّلي نسخة احتياطية بعد'}</span><button class="btn sm" onclick="exportAll().then(()=>render())">تنزيل نسخة</button></div></div>` : ''}`;
 }
-{ const _hm = V.home; V.home = async () => { let e = ''; try { e = await homeEss(); } catch (x) { } const h = await _hm(), i = h.indexOf('</div>') + 6; return i > 5 ? h.slice(0, i) + e + h.slice(i) : e + h; }; }
+{ const _hm = V.home; V.home = async () => { const [e, h] = await Promise.all([homeEss().catch(() => ''), _hm()]); const i = h.indexOf('</div>') + 6; return i > 5 ? h.slice(0, i) + e + h.slice(i) : e + h; }; }
 function shopClose() { form({ title: 'إغلاق المتجر مؤقتًا', sub: 'لن يستقبل المتجر طلبات حتى تفتحينه.', ok: 'إغلاق المتجر', done: 'أُغلق المتجر', fields: [{ id: 'a', label: 'السبب (لكم فقط)' }, { id: 'p', label: 'سبب يظهر للعملاء (اختياري، مثل: صيانة)' }],
   onSubmit: async v => { const { error } = await sb.rpc('shop_state_set', { p_closed: true, p_reason_admin: v.a || null, p_reason_public: v.p || null }); if (error) return error.message; } }); }
 async function shopOpen() { const { error } = await sb.rpc('shop_state_set', { p_closed: false, p_reason_admin: null, p_reason_public: null }); if (error) return toast(error.message); toast('فُتح المتجر', true); render(); }
@@ -1238,6 +1258,32 @@ function launchDlg() {
   openM(`<div class="mh"><h3>${ic('rocket')} إطلاق المتجر</h3><button class="ibtn" onclick="closeM()">${ic('x')}</button></div><p class="sub" style="margin:8px 0">سيظهر للعملاء أن المتجر أُطلق، ويبدأ العدّ من الآن.</p>
   <label class="chk" style="display:flex;gap:8px"><input type="checkbox" id="lc_w"> حذف بيانات التجربة (الطلبات والمالية والتقييمات والسجل)</label><div class="err" id="lc_e"></div><div class="row" style="margin-top:12px"><button class="btn grow" id="lc_ok">إطلاق</button><button class="btn soft" onclick="closeM()">إلغاء</button></div>`);
   $('#lc_ok').onclick = async () => { const w = $('#lc_w').checked; if (w && !await ask('سيتم حذف كل بيانات التجربة نهائيًا. متأكدة؟')) return; $('#lc_ok').disabled = true; const { error } = await sb.rpc('shop_launch', { p_wipe: w }); if (error) { $('#lc_ok').disabled = false; return $('#lc_e').textContent = ERRM(error.message); } closeM(); toast('تم الإطلاق 🎉', true); render(); };
+}
+
+
+/* ---------- تخصيص موقع العملاء: النصوص + الأقسام + الشريط ---------- */
+const TXD = [["home_kicker", "الرئيسية: السطر الصغير فوق العنوان", "صُنع يدويًا بحب"], ["home_title", "الرئيسية: العنوان (الكلمة بين نجمتين *هكذا* تظهر بلون المتجر)", "ربطات شعر كروشيه *ناعمة* بلمسة يدوية"], ["home_text", "الرئيسية: الوصف", "في بيتالي نصنع كل قطعة بالكروشيه بعناية وألوان هادئة، ونجهزها لك أو لمناسباتك وتوزيعاتك."], ["home_btn1", "الرئيسية: زر التسوق", "تسوّق الآن"], ["home_btn2", "الرئيسية: زر التتبع", "تتبّع طلبي"], ["trust1", "شريط الثقة 1", "صُنع يدويًا بعناية"], ["trust2", "شريط الثقة 2", "استلام من مواقعنا"], ["trust3", "شريط الثقة 3", "تأكيد عبر واتساب"], ["cats_title", "عنوان الأقسام", "تسوّق حسب القسم"], ["featured_title", "عنوان المنتجات المختارة", "اختيارات بيتالي"], ["steps_title", "عنوان خطوات الطلب", "خطوات الطلب"], ["step1", "الخطوة 1", "اختر منتجاتك وألوانها وأضفها إلى السلة."], ["step2", "الخطوة 2", "أكمل بياناتك واختر مكان الاستلام، وستحصل على رقم طلب وفاتورة."], ["step3", "الخطوة 3", "نتواصل معك عبر واتساب لتأكيد الطلب، ثم نبلغك عند جاهزيته."], ["wh_title", "بطاقة الكميات: العنوان", "كلما زادت الكمية قلّ سعر القطعة"], ["wh_text", "بطاقة الكميات: النص", "تجد أسعار الكميات الكبيرة وتوزيعات المناسبات مباشرة في صفحة كل منتج، ويُطبَّق السعر تلقائيًا عند اختيار الكمية."], ["info1", "صفحة المنتج: نقطة 1", "صُنع يدويًا بعناية"], ["info2", "صفحة المنتج: نقطة 2", "الاستلام من أحد موقعين في مكة المكرمة"], ["info3", "صفحة المنتج: نقطة 3", "الدفع نقدًا عند الاستلام"], ["info4", "صفحة المنتج: نقطة 4", "تأكيد الطلب عبر واتساب"], ["cart_note", "السلة: ملاحظة تحت الملخص", "السعر النهائي يؤكَّد عند إتمام الطلب. الدفع نقدًا عند الاستلام فقط، والاستلام من أحد موقعينا في مكة المكرمة."], ["return_policy", "سياسة الاسترجاع", "غير قابل للاسترجاع بعد فتح المنتج إلا في حال وجود عيب فيه."], ["footer_text", "أسفل الموقع", "بيتالي · كروشيه بلمسة يدوية"], ["banner_soon", "شريط: قبل الإطلاق", "سيتم إطلاق المتجر قريبًا ✨"], ["banner_launched", "شريط: بعد الإطلاق", "تم إطلاق متجر بيتالي 🎉"]];
+const LYD = [["trust", "شريط الثقة"], ["cats", "أزرار الأقسام"], ["featured", "المنتجات المختارة"], ["steps", "خطوات الطلب"], ["reviews", "آراء العملاء"], ["wh", "بطاقة الكميات"]];
+let CU = { tx: {}, ly: {}, bn: {} };
+V.custom = async () => {
+  const r = await sb.from('settings').select('id,value').in('id', ['shop_texts', 'shop_layout', 'shop_banner']), g = id => (r.data || []).find(x => x.id === id)?.value || {};
+  CU = { tx: { ...g('shop_texts') }, ly: { ...g('shop_layout') }, bn: { ...g('shop_banner') } };
+  const bm = CU.bn.mode || 'auto';
+  return `<div class="ph"><div><h2>تخصيص المتجر</h2><div class="sub">غيّري نصوص موقع العملاء وأقسام الصفحة الرئيسية والشريط العلوي. اترك الحقل فارغًا ليرجع للنص الأصلي.</div></div><button class="btn sm" onclick="customSave()">${ic('check')} حفظ</button></div>
+  <div class="card"><h3>الشريط العلوي</h3><div class="sub" style="margin-bottom:8px">تحكّمي متى يظهر الشريط ومتى يختفي (شريط الإغلاق المؤقت يظهر دائمًا عند إغلاق المتجر).</div>
+  <label class="lb">حالة الشريط</label><select onchange="CU.bn.mode=this.value"><option value="auto" ${bm === 'auto' ? 'selected' : ''}>تلقائي (قبل الإطلاق «قريبًا»، وبعده أسبوع ثم يختفي)</option><option value="show" ${bm === 'show' ? 'selected' : ''}>ظاهر دائمًا حتى أخفيه</option><option value="hide" ${bm === 'hide' ? 'selected' : ''}>مخفي</option></select>
+  <label class="lb">نص مخصص للشريط (اختياري)</label><input value="${esc(CU.bn.text || '')}" oninput="CU.bn.text=this.value" placeholder="مثال: خصم 10% بمناسبة الإطلاق">
+  <label class="lb">يختفي تلقائيًا بعد تاريخ (اختياري)</label><input type="date" value="${esc(CU.bn.until || '')}" onchange="CU.bn.until=this.value"></div>
+  <div class="card"><h3>أقسام الصفحة الرئيسية</h3><div class="sub" style="margin-bottom:6px">أخفي أو أظهري أي قسم.</div>${LYD.map(([k, l]) => `<label class="chk" style="display:flex;padding:6px 0"><input type="checkbox" ${CU.ly[k] === false ? '' : 'checked'} onchange="CU.ly['${k}']=this.checked"> ${l}</label>`).join('')}</div>
+  <div class="card"><h3>النصوص</h3>${TXD.map(([k, l, dv]) => `<label class="lb">${esc(l)}</label>${dv.length > 60 ? `<textarea rows="2" oninput="CU.tx['${k}']=this.value" placeholder="${esc(dv)}">${esc(CU.tx[k] || '')}</textarea>` : `<input value="${esc(CU.tx[k] || '')}" oninput="CU.tx['${k}']=this.value" placeholder="${esc(dv)}">`}`).join('')}</div>
+  <button class="btn" onclick="customSave()">${ic('check')} حفظ التغييرات</button>`;
+};
+async function customSave() {
+  const tx = {}; Object.entries(CU.tx).forEach(([k, v]) => { if (String(v || '').trim()) tx[k] = String(v).trim(); });
+  const ly = {}; Object.entries(CU.ly).forEach(([k, v]) => { if (v === false) ly[k] = false; });
+  const bn = { ...CU.bn }; if (!bn.mode || bn.mode === 'auto') delete bn.mode; if (!bn.text || !bn.text.trim()) delete bn.text; if (!bn.until) delete bn.until;
+  const { error } = await sb.from('settings').upsert([{ id: 'shop_texts', value: tx }, { id: 'shop_layout', value: ly }, { id: 'shop_banner', value: bn }]);
+  if (error) return toast(error.message); toast('تم الحفظ، يظهر في الموقع فورًا', true);
 }
 
 /* ---------- الطلب: بطاقة التوزيع الجديدة ---------- */
@@ -1335,7 +1381,7 @@ function editItem(id) {
 /* ---- المنتجات الجاهزة ---- */
 async function loadRS() { const r = await sb.from('ready_stock').select('*').is('deleted_at', null).order('created_at'); RSROWS = r.error ? [] : (r.data || []); RSUM = {}; RSROWS.forEach(x => RSUM[x.product_id] = (RSUM[x.product_id] || 0) + x.qty); }
 const rsBadge = p => { if (!p.track_stock) return ''; const n = RSUM[p.id] || 0; return n <= 0 ? '<span class="tag s-cancelled">نفدت الكمية</span>' : n <= 5 ? `<span class="tag">متبقي ${n}</span>` : `<span class="tag s-ready">جاهز ${n}</span>`; };
-{ const _p = V.products; V.products = async () => { await loadRS(); return _p(); }; }
+{ const _p = V.products; V.products = async () => { const [, h] = await Promise.all([loadRS(), _p()]); return h; }; }
 V.ready = async () => {
   await loadRS(); const [pr, sg] = await Promise.all([sb.from('products').select('id,name,track_stock,options').is('deleted_at', null).order('name'), sb.rpc('demand_suggestions')]); RSP = pr.data || [];
   const S = (sg.data || []).slice(0, 6), T = RSP.filter(p => p.track_stock);
