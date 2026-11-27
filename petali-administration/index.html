@@ -1033,9 +1033,6 @@ function finCfg() { form({ title: 'نسب التوزيع', sub: 'حصة بيتا
 
 /* ---------- القفل: لراما فقط ---------- */
 const isOwner = () => me && me.key === 'rama';
-{ const _l = lockView; lockView = async () => isOwner() ? _l() : `<div class="card" style="max-width:420px;margin:30px auto;text-align:center"><div style="color:var(--mv);transform:scale(2.2);display:inline-block;margin-top:10px">${ic('lock')}</div><h3 style="margin:14px 0 6px">${TITLES[view]} مقفل</h3><div class="sub">هذا القسم حساس، ويفتحه صاحب الصلاحية فقط.</div></div>`; }
-{ const _o = lkOpen; lkOpen = async () => { if (!isOwner()) return; return _o(); }; }
-lkBar = () => isOwner() ? `<div class="row" style="margin-bottom:8px;justify-content:flex-end"><button class="btn soft sm" onclick="pinDlg()">${ic('key')} رمز القفل</button><button class="btn soft sm" onclick="UNL=0;drawNav();render()">${ic('lock')} قفل الآن</button></div>` : '';
 pinDlg = function () {
   form({ title: 'رمز قفل الأقسام الحساسة', sub: 'رمز خاص بحسابك أنتِ فقط، ولا يفتح به أحد غيرك. لو نسيتِه اكتبي كلمة مرور حسابك لإعادة تعيينه.', ok: 'حفظ الرمز', done: 'تم حفظ الرمز',
     fields: [...(PINSET ? [{ id: 'o', type: 'password', label: 'الرمز الحالي (أو اتركيه فارغًا واكتبي كلمة المرور)' }] : []), { id: 'pw', type: 'password', label: PINSET ? 'كلمة مرور حسابك (لإعادة التعيين عند نسيان الرمز)' : 'كلمة مرور حسابك (للتأكيد)' }, { id: 'n', type: 'password', label: 'الرمز الجديد (٤ خانات أو أكثر)', req: 1 }],
@@ -1123,7 +1120,6 @@ const monTxt = () => { const n = daysToMon(); return n === 0 ? 'اليوم يو�
 
 /* قفل لحظي قبل عمليات حساسة (النسب) */
 function askUnlock(cb) {
-  if (!isOwner()) return toast('هذا الإجراء لصاحبة الصلاحية فقط');
   if (isUnl()) { UNL = Date.now(); return cb(); }
   (async () => {
     if (PINSET === null) { const r = await sb.rpc('pin_status'); PINSET = r.error ? false : !!r.data; }
@@ -1150,14 +1146,27 @@ function finOp(kind, pre) {
       const { error } = await fpost(c[0], v.a, c[1], c[2], v.n, c[3]); if (error) return error.message; } });
 }
 
-function finCfg() { askUnlock(finCfg2); }
+async function finCfg() {
+  if (!isOwner()) return;
+  const r = await sb.rpc('cfg_pin_status'); if (r.error) return toast(r.error.message);
+  if (!r.data) return cfgPinDlg(true);
+  finCfg2();
+}
+function cfgPinDlg(first) {
+  form({ title: first ? 'رمز تعديل النسب' : 'تغيير رمز النسب', sub: 'رمز خاص بتعديل النسب فقط، غير رمز قفل الأقسام، ولا يراه أو يستخدمه غيرك. ' + (first ? 'اضبطيه أول مرة ثم عدّلي النسب.' : 'لو نسيتيه اكتبي كلمة مرور حسابك.'), ok: 'حفظ الرمز', done: 'تم حفظ الرمز',
+    fields: [...(first ? [] : [{ id: 'o', type: 'password', label: 'الرمز الحالي (أو اتركيه فارغًا واكتبي كلمة المرور)' }, { id: 'pw', type: 'password', label: 'كلمة مرور حسابك (عند نسيان الرمز)' }]), { id: 'n', type: 'password', label: 'الرمز الجديد (٤ خانات أو أكثر)', req: 1 }],
+    onSubmit: async v => {
+      if (v.o) { const { error } = await sb.rpc('cfg_pin_set', { p_new: v.n, p_old: v.o }); return error ? error.message : undefined; }
+      if (!first) { if (!v.pw) return 'اكتبي الرمز الحالي أو كلمة مرور حسابك'; const u = (await sb.auth.getUser()).data.user, a = await sb.auth.signInWithPassword({ email: u.email, password: v.pw }); if (a.error) return 'كلمة المرور غير صحيحة'; }
+      const { error } = await sb.rpc(first ? 'cfg_pin_set' : 'cfg_pin_reset', first ? { p_new: v.n } : { p_new: v.n }); if (error) return error.message; } });
+}
 function finCfg2() {
   const f = (id, label, k) => ({ id, type: 'number', label, value: String(FC[k] ?? 0), req: 1 });
   form({ title: 'نسب التوزيع', sub: 'المنفذة تأخذ نسبتها من سعر القطعة فور اكتمال الطلب. الباقي يتجمع أسبوعيًا ويُقسَّم يوم الإغلاق حسب هذه النسب، وبيتالي = الباقي (مع فائض التقريب). تسري من الإغلاق القادم.', ok: 'حفظ', done: 'تم الحفظ',
-    fields: [f('m', 'نسبة المنفذة من سعر القطعة (%)', 'maker_pct'), f('p', 'راما ومريم (بالتساوي) من الباقي (%)', 'partners_pct'), f('e', 'الطوارئ (%)', 'emergency_pct'), f('k', 'التسويق (%)', 'marketing_pct'), f('d', 'التطوير (%)', 'dev_pct'), { id: 'x', type: 'number', label: 'أعلى مبلغ للسلفة الواحدة (0 = بلا حد)', value: String(FC.advance_max || 0) }],
+    fields: [f('m', 'نسبة المنفذة من سعر القطعة (%)', 'maker_pct'), f('p', 'راما ومريم (بالتساوي) من الباقي (%)', 'partners_pct'), f('e', 'الطوارئ (%)', 'emergency_pct'), f('k', 'التسويق (%)', 'marketing_pct'), f('d', 'التطوير (%)', 'dev_pct'), { id: 'x', type: 'number', label: 'أعلى مبلغ للسلفة الواحدة (0 = بلا حد)', value: String(FC.advance_max || 0) }, { id: 'pin', type: 'password', label: 'رمز تعديل النسب', req: 1 }],
     onSubmit: async v => { const c = { maker_pct: n0(v.m), partners_pct: n0(v.p), emergency_pct: n0(v.e), marketing_pct: n0(v.k), dev_pct: n0(v.d), advance_max: n0(v.x) };
       if (c.maker_pct > 100 || c.partners_pct + c.emergency_pct + c.marketing_pct + c.dev_pct > 100) return 'مجموع النسب يجب ألا يتجاوز 100 (وبيتالي = الباقي ' + (100 - c.partners_pct - c.emergency_pct - c.marketing_pct - c.dev_pct) + '%)';
-      const { error } = await sb.rpc('fin_set_config', { p_cfg: c }); if (error) return error.message; FC = { ...FC, ...c }; } });
+      const { error } = await sb.rpc('fin_set_config', { p_cfg: c, p_pin: v.pin }); if (error) return /wrong_pin/.test(error.message) ? 'رمز النسب غير صحيح' : error.message; FC = { ...FC, ...c }; } });
 }
 
 let finTab2 = 'sum';
@@ -1176,8 +1185,8 @@ V.finance = async () => {
     <div class="card click" onclick="finTab2='week';render()"><div class="row"><div class="grow"><div class="sub">أرباح الأسبوع الجارية (تُوزَّع يوم الإغلاق)</div><b style="font-size:1.3rem;color:var(--mv)">${money(B.pool || 0)}</b></div><span class="tag">${monTxt()}</span></div></div>
     <div class="grid">${PART.map(p => `<div class="card"><h3>${PNM[p]}</h3><div class="row"><span class="grow sub">الراتب</span><b>${money(B[p] || 0)}</b>${wd(p)}</div><div class="row"><span class="grow sub">محفظة التنفيذ</span><b>${money(B[p + '_w'] || 0)}</b>${wd(p + '_w')}</div></div>`).join('')}</div>
     <div class="card">${xferTxt(xf)}</div>
-    ${isOwner() ? `<div class="card"><div class="row"><div class="grow"><b>نسب التوزيع</b><div class="sub">المنفذة ${FC.maker_pct}% · الشريكتان ${FC.partners_pct}% · الطوارئ ${FC.emergency_pct}% · التسويق ${FC.marketing_pct}% · التطوير ${FC.dev_pct}% · بيتالي الباقي</div></div><button class="btn soft sm" onclick="askUnlock(finCfg)">${ic('lock')} تعديل بالرمز</button></div></div>` : ''}
-    <div class="row" style="flex-wrap:wrap;margin-bottom:10px"><button class="btn soft sm" onclick="finOp('expense')">${ic('minus')} مصروف</button><button class="btn soft sm" onclick="finOp('transfer')">${ic('arrow-left-right')} تحويل بين الصناديق</button><button class="btn soft sm" onclick="askUnlock(finCfg)">${ic('settings')} النسب</button></div>
+    ${isOwner() ? `<div class="card"><div class="row"><div class="grow"><b>نسب التوزيع</b><div class="sub">المنفذة ${FC.maker_pct}% · الشريكتان ${FC.partners_pct}% · الطوارئ ${FC.emergency_pct}% · التسويق ${FC.marketing_pct}% · التطوير ${FC.dev_pct}% · بيتالي الباقي</div></div><button class="btn soft sm" onclick="finCfg()">${ic('lock')} تعديل بالرمز</button><button class="btn soft sm" onclick="cfgPinDlg(false)">${ic('key')} رمز النسب</button></div></div>` : ''}
+    <div class="row" style="flex-wrap:wrap;margin-bottom:10px"><button class="btn soft sm" onclick="finOp('expense')">${ic('minus')} مصروف</button><button class="btn soft sm" onclick="finOp('transfer')">${ic('arrow-left-right')} تحويل بين الصناديق</button>${isOwner() ? `<button class="btn soft sm" onclick="finCfg()">${ic('settings')} النسب</button>` : ''}</div>
     <h3>آخر الحركات</h3><div class="card">${LV.slice(0, 6).map(mv).join('') || '<div class="sub">لا توجد حركات بعد.</div>'}</div>`;
   } else if (finTab2 === 'week') {
     const { data: pv, error } = await sb.rpc('fin_week_preview'), W = (await sb.from('fin_weeks').select('*').not('closed_at', 'is', null).order('closed_at', { ascending: false }).limit(20)).data || [];
